@@ -1675,7 +1675,10 @@ function getWrongChoices(correct,all,n){
 function renderQuiz(){
   quizAnswered=false;
   const q=quizItems[quizIdx];
-  const allWords=[...currentLesson.words,...currentLesson.sentences];
+  // 복습 모드일 때는 quizItems 자체를 풀로 사용, 일반 모드는 currentLesson
+  const allWords = isReviewMode
+    ? quizItems
+    : (currentLesson ? [...currentLesson.words,...currentLesson.sentences] : quizItems);
   document.getElementById('quizNum').textContent=`${quizIdx+1} / ${quizItems.length}`;
   document.getElementById('quizProgress').textContent=`문제 ${quizIdx+1} / ${quizItems.length} (${q.type==='word'?'단어':'문장'})`;
   document.getElementById('quizMeaning').textContent=q.m;
