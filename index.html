@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"/>
+<title>점심때 뭐해?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#e8613a;--primary-light:#fde8e0;--primary-dark:#c94e2a;
+  --bg:#fdf6f0;--surface:#fff;--text:#1a1210;--sub:#7a6560;--muted:#b0a09a;
+  --border:#f0e4dc;--green:#2d9e7a;--green-light:#e8f5f0;
+  --blue:#4f46e5;--blue-light:#eef0ff;--red:#ef4444;--red-light:#fef2f2;
+  --gold:#f59e0b;
+}
+html,body{height:100%;background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text);overflow:hidden}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);max-width:430px;margin:0 auto}
+.screen.hidden{display:none}
+
+/* SPLASH */
+#splashScreen{align-items:center;justify-content:center;gap:0;padding:0 32px}
+.splash-logo{}
+.splash-logo img{width:100%;height:100%;object-fit:cover}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.splash-title{font-size:28px;font-weight:800;color:var(--primary);letter-spacing:-1px;margin-bottom:6px}
+.splash-desc{font-size:14px;color:var(--sub);margin-bottom:40px;text-align:center}
+.lang-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:40px}
+.lang-pill{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;background:var(--surface);border:1.5px solid var(--border)}
+
+/* AUTH */
+#authScreen{padding:0 28px;padding-top:60px;overflow-y:auto}
+.auth-back{position:absolute;top:14px;left:14px;background:none;border:none;font-size:24px;cursor:pointer;padding:8px;z-index:10}
+.auth-tabs{display:flex;background:var(--primary-light);border-radius:12px;padding:4px;margin-bottom:28px}
+.auth-tab{flex:1;padding:10px;border:none;background:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:var(--sub);transition:.2s;font-family:inherit}
+.auth-tab.active{background:var(--primary);color:#fff}
+.field-label{font-size:12px;font-weight:600;color:var(--sub);margin-bottom:6px}
+.field-input{width:100%;height:50px;border:1.5px solid var(--border);border-radius:12px;padding:0 16px;font-size:15px;background:var(--surface);color:var(--text);outline:none;transition:.2s;font-family:inherit}
+.field-input:focus{border-color:var(--primary)}
+.field-wrap{margin-bottom:14px}
+.btn-full{width:100%;height:54px;background:var(--primary);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit}
+.btn-full:hover{background:var(--primary-dark)}
+.auth-or{text-align:center;font-size:13px;color:var(--muted);margin:16px 0}
+.btn-guest{width:100%;height:48px;background:transparent;color:var(--sub);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.err-msg{color:var(--red);font-size:12px;margin-top:4px;display:none}
+
+/* LANG SELECT */
+#langSelectScreen{padding:0 24px;padding-top:60px;overflow-y:auto}
+.lang-select-title{font-size:24px;font-weight:800;letter-spacing:-.8px;margin-bottom:6px}
+.lang-select-desc{font-size:14px;color:var(--sub);margin-bottom:28px}
+.lang-option{display:flex;align-items:center;gap:14px;background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;transition:.2s}
+.lang-option:hover,.lang-option.selected{border-color:var(--primary);background:var(--primary-light)}
+.lang-option .lf{font-size:32px}
+.lang-option .li{flex:1}
+.lang-option .ln{font-size:16px;font-weight:700}
+.lang-option .ls{font-size:12px;color:var(--muted);margin-top:2px}
+.lang-check{width:24px;height:24px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;flex-shrink:0}
+.lang-check svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5}
+.lang-option.selected .lang-check{opacity:1}
+
+/* HEADER */
+.app-header{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.header-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--primary)}
+.header-logo img{width:28px;height:28px;border-radius:7px;object-fit:cover}
+.streak-badge{display:flex;align-items:center;gap:4px;background:var(--primary-light);padding:5px 10px;border-radius:20px;font-size:13px;font-weight:700;color:var(--primary)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* BOTTOM NAV */
+.bottom-nav{height:64px;display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--muted);font-size:10px;font-weight:600;transition:.2s;font-family:inherit}
+.nav-item.active{color:var(--primary)}
+.nav-icon{font-size:20px}
+
+/* HOME */
+#homeScreen .scroll-area{flex:1;overflow-y:auto;padding:16px}
+.today-card{background:var(--primary);border-radius:20px;padding:20px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden}
+.today-card::after{content:'🍱';position:absolute;right:12px;bottom:-6px;font-size:60px;opacity:.2}
+.today-date{font-size:11px;opacity:.8;margin-bottom:4px}
+.today-title{font-size:19px;font-weight:800;letter-spacing:-.5px;margin-bottom:16px}
+.btn-start{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--primary);padding:10px 20px;border-radius:12px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.stat-n{font-size:24px;font-weight:800;color:var(--primary)}
+.stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+.section-title{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:10px}
+
+/* STUDY */
+#studyScreen .study-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.step-bar{display:flex;padding:12px 16px;gap:6px}
+.step-dot{flex:1;height:4px;border-radius:2px;background:var(--border);transition:.3s}
+.step-dot.done{background:var(--primary)}
+.step-dot.active{background:var(--primary)}
+.step-label{text-align:center;font-size:12px;color:var(--sub);font-weight:600;padding:0 16px 10px}
+.cards-wrapper{flex:1;display:flex;flex-direction:column;padding:0 16px 12px;gap:12px;overflow-y:auto}
+.card-section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.h-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.h-scroll::-webkit-scrollbar{height:3px}
+.h-scroll::-webkit-scrollbar-thumb{background:var(--primary);border-radius:2px}
+.word-card{flex-shrink:0;width:136px;background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:14px 12px;cursor:pointer;transition:.2s;user-select:none;display:flex;flex-direction:column}
+.word-card.playing{border-color:var(--primary);background:var(--primary-light)}
+.word-foreign{font-size:19px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:'Noto Sans JP',sans-serif;line-height:1.3}
+.word-reading{font-size:11px;color:var(--primary);margin-bottom:6px;font-family:'Noto Sans JP',sans-serif}
+.word-meaning{font-size:12px;color:var(--sub);font-weight:500;flex:1}
+.word-speaker{font-size:16px;margin-top:8px}
+.sentence-card{flex-shrink:0;width:230px;background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:.2s}
+.sentence-card.playing{border-color:var(--primary);background:var(--primary-light)}
+.sent-foreign{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:'Noto Sans JP',sans-serif;line-height:1.5}
+.sent-reading{font-size:11px;color:var(--primary);margin-bottom:5px;font-family:'Noto Sans JP',sans-serif}
+.sent-meaning{font-size:12px;color:var(--sub);line-height:1.5}
+.nav-btns{display:flex;gap:10px;padding:10px 16px;flex-shrink:0}
+.btn-prev{flex:1;height:50px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;color:var(--sub);font-family:inherit}
+.btn-next{flex:2;height:50px;background:var(--primary);border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;color:#fff;font-family:inherit}
+
+/* QUIZ - 4지선다 */
+#quizScreen .quiz-body{flex:1;overflow-y:auto;padding:16px}
+.quiz-q-box{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
+.quiz-q-label{font-size:11px;color:var(--sub);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.quiz-meaning{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px}
+.quiz-sub{font-size:12px;color:var(--muted)}
+.quiz-counter{display:flex;gap:5px;justify-content:center;margin-bottom:14px}
+.q-dot{width:9px;height:9px;border-radius:50%;background:var(--border);transition:.3s}
+.q-dot.correct{background:var(--green)}
+.q-dot.wrong{background:var(--red)}
+.q-dot.current{background:var(--primary)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.choice-btn{height:64px;background:var(--surface);border:2px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP','Noto Sans KR',sans-serif;transition:.2s;padding:0 10px;line-height:1.3;color:var(--text)}
+.choice-btn:hover:not(:disabled){border-color:var(--primary);background:var(--primary-light)}
+.choice-btn.correct{border-color:var(--green);background:var(--green-light);color:var(--green)}
+.choice-btn.wrong{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.choice-btn:disabled{cursor:default}
+.quiz-feedback{text-align:center;font-size:14px;font-weight:700;min-height:22px;margin-bottom:12px}
+.quiz-feedback.correct{color:var(--green)}
+.quiz-feedback.wrong{color:var(--red)}
+.quiz-progress{text-align:center;font-size:12px;color:var(--sub);margin-bottom:12px}
+.quiz-speak-btn{background:var(--primary-light);border:none;border-radius:10px;padding:7px 14px;font-size:12px;cursor:pointer;color:var(--primary);font-weight:600;font-family:inherit;margin-top:8px}
+
+/* RESULT */
+#resultScreen{align-items:center;justify-content:flex-start;padding:28px 24px 0;overflow-y:auto}
+.result-emoji{font-size:68px;margin-bottom:10px;animation:popIn .5s ease}
+.result-score{font-size:50px;font-weight:800;color:var(--primary);letter-spacing:-2px}
+.result-label{font-size:14px;color:var(--sub);margin-bottom:22px}
+.result-breakdown{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-label{font-size:13px;color:var(--sub)}
+.breakdown-val{font-size:14px;font-weight:700}
+.result-btns{width:100%;display:flex;gap:10px;margin-bottom:14px}
+.btn-ranking{flex:1;height:50px;background:var(--primary-light);color:var(--primary);border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-home{flex:1;height:50px;background:var(--primary);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* RANKING */
+#rankingScreen .rank-body{flex:1;overflow-y:auto;padding:16px}
+.my-rank-card{background:var(--primary);color:#fff;border-radius:16px;padding:16px;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.my-rank-num{font-size:26px;font-weight:800;width:40px}
+.my-rank-info{flex:1}
+.my-rank-name{font-size:15px;font-weight:700}
+.my-rank-score{font-size:13px;opacity:.8}
+.rank-list{display:flex;flex-direction:column;gap:8px}
+.rank-item{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px}
+.rank-item.top1{border-color:#f59e0b;background:#fffbeb}
+.rank-item.top2{border-color:#94a3b8;background:#f8fafc}
+.rank-item.top3{border-color:#cd7c2e;background:#fef7f0}
+.rank-num{font-size:18px;font-weight:800;width:30px;text-align:center}
+.rank-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--primary);flex-shrink:0}
+.rank-info{flex:1}
+.rank-name{font-size:14px;font-weight:700}
+.rank-detail{font-size:11px;color:var(--muted)}
+.rank-score{font-size:15px;font-weight:800;color:var(--primary)}
+
+/* PROFILE */
+#profileScreen .scroll-area{flex:1;padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px;overflow-y:auto}
+
+/* TOAST */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:#1a1210;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading-overlay{position:fixed;inset:0;background:rgba(253,246,240,.88);display:flex;align-items:center;justify-content:center;z-index:998;opacity:0;pointer-events:none;transition:.2s}
+.loading-overlay.show{opacity:1;pointer-events:all}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading"><div class="loading-spinner"></div></div>
+
+<!-- SPLASH -->
+<div class="screen" id="splashScreen">
+  <div class="splash-logo" style="width:160px;height:160px;border-radius:32px;overflow:hidden;margin-bottom:20px;animation:popIn .5s ease;box-shadow:0 8px 32px rgba(232,97,58,.25);flex-shrink:0"><img style="width:100%;height:100%;object-fit:cover;display:block" src="data:image/jpeg;base64,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" alt="로고"/></div>
+  <div class="splash-title">점심때 뭐해?</div>
+  <div class="splash-desc">점심 짬에 20분, 매일 조금씩 언어 공부</div>
+  <div class="lang-pills">
+    <div class="lang-pill">🇯🇵 일본어</div>
+    <div class="lang-pill">🇺🇸 영어</div>
+    <div class="lang-pill">🇨🇳 중국어</div>
+    <div class="lang-pill">🇪🇸 스페인어</div>
+    <div class="lang-pill">🇫🇷 프랑스어</div>
+  </div>
+  <button class="btn-full" style="width:280px" onclick="showScreen('authScreen')">시작하기 →</button>
+</div>
+
+<!-- AUTH -->
+<div class="screen hidden" id="authScreen">
+  <button class="auth-back" onclick="showScreen('splashScreen')">←</button>
+  <div style="margin-top:36px;margin-bottom:22px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <div style="font-size:20px;font-weight:800">계정으로 진도 저장</div>
+    <div style="font-size:13px;color:var(--sub);margin-top:4px">랭킹 참여 + streak 동기화</div>
+  </div>
+  <div class="auth-tabs">
+    <button class="auth-tab active" onclick="switchTab('login')">로그인</button>
+    <button class="auth-tab" onclick="switchTab('signup')">회원가입</button>
+  </div>
+  <div id="loginForm">
+    <div class="field-wrap">
+      <div class="field-label">아이디 (닉네임)</div>
+      <input class="field-input" id="loginId" placeholder="예: 점심왕김철수" maxlength="20"/>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">비밀번호</div>
+      <input class="field-input" id="loginPw" type="password" placeholder="비밀번호 입력"/>
+      <div class="err-msg" id="loginErr">아이디 또는 비밀번호가 틀렸어요</div>
+    </div>
+    <button class="btn-full" onclick="doLogin()">로그인</button>
+  </div>
+  <div id="signupForm" style="display:none">
+    <div class="field-wrap">
+      <div class="field-label">닉네임 (랭킹에 표시)</div>
+      <input class="field-input" id="signupId" placeholder="예: 점심왕김철수" maxlength="20"/>
+      <div class="err-msg" id="signupIdErr">이미 사용 중인 닉네임이에요</div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">비밀번호</div>
+      <input class="field-input" id="signupPw" type="password" placeholder="6자 이상"/>
+      <div class="err-msg" id="signupPwErr">비밀번호는 6자 이상이어야 해요</div>
+    </div>
+    <button class="btn-full" onclick="doSignup()">다음: 언어 선택 →</button>
+  </div>
+  <div class="auth-or">── 또는 ──</div>
+  <button class="btn-guest" onclick="doGuest()">👤 게스트로 시작 (랭킹 제외)</button>
+</div>
+
+<!-- 언어 선택 -->
+<div class="screen hidden" id="langSelectScreen">
+  <div class="app-header">
+    <div class="header-logo"><img src="data:image/jpeg;base64,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" alt="로고"/> 점심때 뭐해?</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 20px 32px">
+    <div class="lang-select-title">어떤 언어를<br>공부할까요?</div>
+    <div class="lang-select-desc">언제든 설정에서 바꿀 수 있어요</div>
+    <div class="lang-option selected" data-lang="ja" onclick="selectLang(this)">
+      <div class="lf">🇯🇵</div>
+      <div class="li"><div class="ln">일본어</div><div class="ls">日本語 · JLPT N5부터</div></div>
+      <div class="lang-check"><svg viewBox="0 0 13 13"><polyline points="2,6 5.5,9.5 11,3"/></svg></div>
+    </div>
+    <div class="lang-option" data-lang="en" onclick="selectLang(this)">
+      <div class="lf">🇺🇸</div>
+      <div class="li"><div class="ln">영어</div><div class="ls">English · 기초 회화</div></div>
+      <div class="lang-check"><svg viewBox="0 0 13 13"><polyline points="2,6 5.5,9.5 11,3"/></svg></div>
+    </div>
+    <div class="lang-option" data-lang="zh" onclick="selectLang(this)">
+      <div class="lf">🇨🇳</div>
+      <div class="li"><div class="ln">중국어</div><div class="ls">中文 · HSK 1부터</div></div>
+      <div class="lang-check"><svg viewBox="0 0 13 13"><polyline points="2,6 5.5,9.5 11,3"/></svg></div>
+    </div>
+    <div class="lang-option" data-lang="es" onclick="selectLang(this)">
+      <div class="lf">🇪🇸</div>
+      <div class="li"><div class="ln">스페인어</div><div class="ls">Español · 기초부터</div></div>
+      <div class="lang-check"><svg viewBox="0 0 13 13"><polyline points="2,6 5.5,9.5 11,3"/></svg></div>
+    </div>
+    <div class="lang-option" data-lang="fr" onclick="selectLang(this)">
+      <div class="lf">🇫🇷</div>
+      <div class="li"><div class="ln">프랑스어</div><div class="ls">Français · 기초부터</div></div>
+      <div class="lang-check"><svg viewBox="0 0 13 13"><polyline points="2,6 5.5,9.5 11,3"/></svg></div>
+    </div>
+    <button class="btn-full" style="margin-top:20px" onclick="confirmLang()">이 언어로 시작하기 →</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen hidden" id="homeScreen">
+  <div class="app-header">
+    <div class="header-logo"><img src="data:image/jpeg;base64,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" alt="로고"/> 점심때 뭐해?</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="streak-badge" title="연속 학습일">🔥 <span id="homeStreak">0</span>일</div>
+      <div class="avatar" id="homeAvatar">?</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="today-card">
+      <div class="today-date" id="todayDate"></div>
+      <div class="today-title" id="todayTheme">오늘의 학습</div>
+      <button class="btn-start" onclick="startStudy()">📖 학습 시작 →</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-n" id="statStreak">0</div><div class="stat-l">🔥 연속 학습</div></div>
+      <div class="stat-box"><div class="stat-n" id="statTotal">0</div><div class="stat-l">📚 총 학습일</div></div>
+      <div class="stat-box"><div class="stat-n" id="statScore">0</div><div class="stat-l">⭐ 누적 점수</div></div>
+      <div class="stat-box" onclick="showTab('ranking')" style="cursor:pointer;border-color:var(--primary)"><div class="stat-n" id="statRank">...</div><div class="stat-l">🏆 내 랭킹 →</div></div>
+    </div>
+    <div class="section-title">📋 오늘의 학습 플로우</div>
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">📖</span><div><div style="font-size:13px;font-weight:700">단어 5개 (가로 카드)</div><div style="font-size:12px;color:var(--sub)">탭하면 발음 재생</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">💬</span><div><div style="font-size:13px;font-weight:700">문장 5개 (가로 카드)</div><div style="font-size:12px;color:var(--sub)">실용 예문 + 발음</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">✏️</span><div><div style="font-size:13px;font-weight:700">⚡ 점심 퀴즈 타임</div><div style="font-size:12px;color:var(--sub)">뜻 보고 정답 고르기</div></div></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🏆</span><div><div style="font-size:13px;font-weight:700">점수 → 전체 랭킹</div><div style="font-size:12px;color:var(--sub)">맞힐수록 높은 누적 점수</div></div></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between" onclick="showScreen('langSelectScreen')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px" id="homeLangFlag">🇯🇵</span>
+        <div>
+          <div style="font-size:13px;font-weight:700">현재 학습 언어</div>
+          <div style="font-size:12px;color:var(--sub)" id="homeLangName">일본어</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--primary);font-weight:600">변경 →</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="showTab('home')"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="startStudy()"><span class="nav-icon">📖</span>학습</button>
+    <button class="nav-item" onclick="showTab('ranking')"><span class="nav-icon">🏆</span>랭킹</button>
+    <button class="nav-item" onclick="showTab('profile')"><span class="nav-icon">👤</span>내 정보</button>
+  </div>
+</div>
+
+<!-- STUDY -->
+<div class="screen hidden" id="studyScreen">
+  <div class="app-header">
+    <button style="background:none;border:none;font-size:22px;cursor:pointer" onclick="goBack()">←</button>
+    <div style="font-size:14px;font-weight:700" id="studyStepTitle">📖 단어 학습</div>
+    <div style="font-size:13px;color:var(--sub)" id="studyStepNum">1 / 2</div>
+  </div>
+  <div class="study-body">
+    <div class="step-bar" id="stepBar">
+      <div class="step-dot active" id="sd0"></div>
+      <div class="step-dot" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+    </div>
+    <div class="step-label" id="stepLabel">카드를 탭하면 발음을 들을 수 있어요 🔊</div>
+    <div class="cards-wrapper" id="cardsWrapper"></div>
+    <div class="nav-btns">
+      <button class="btn-prev" id="studyPrevBtn" onclick="studyPrev()" style="visibility:hidden">← 이전</button>
+      <button class="btn-next" id="studyNextBtn" onclick="studyNext()">문장 학습으로 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ (4지선다) -->
+<div class="screen hidden" id="quizScreen">
+  <div class="app-header">
+    <button style="background:none;border:none;font-size:22px;cursor:pointer" onclick="goBack()">←</button>
+    <div style="font-size:14px;font-weight:700">⚡ 점심 퀴즈 타임</div>
+    <div style="font-size:13px;color:var(--sub)" id="quizNum">1 / 10</div>
+  </div>
+  <div class="quiz-body">
+    <div class="quiz-counter" id="quizCounter"></div>
+    <div class="quiz-q-box">
+      <div class="quiz-q-label">이 뜻에 맞는 표현은?</div>
+      <div class="quiz-meaning" id="quizMeaning">안녕하세요</div>
+      <div class="quiz-sub" id="quizSub"></div>
+      <button class="quiz-speak-btn" onclick="quizSpeak()">🔊 정답 듣기</button>
+    </div>
+    <div class="quiz-progress" id="quizProgress">문제 1 / 10</div>
+    <div class="choices" id="choicesGrid"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen hidden" id="resultScreen">
+  <div id="resultEmoji" class="result-emoji">🎉</div>
+  <div class="result-score" id="resultScore">0점</div>
+  <div class="result-label" id="resultLabel">오늘도 수고했어요!</div>
+  <div class="result-breakdown">
+    <div class="breakdown-row"><div class="breakdown-label">✅ 맞은 문제</div><div class="breakdown-val" id="resCorrect" style="color:var(--green)">-</div></div>
+    <div class="breakdown-row"><div class="breakdown-label">❌ 틀린 문제</div><div class="breakdown-val" id="resWrong" style="color:var(--red)">-</div></div>
+    <div class="breakdown-row"><div class="breakdown-label">⭐ 오늘 획득</div><div class="breakdown-val" id="resPoints" style="color:var(--primary)">-</div></div>
+    <div class="breakdown-row"><div class="breakdown-label">🏆 누적 점수</div><div class="breakdown-val" id="resTotalScore" style="color:var(--primary)">-</div></div>
+  </div>
+  <!-- 전체 언어 랭킹 -->
+  <div id="allRankingsBox" style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">🏆 전체 언어 랭킹 <span style="font-size:11px;color:var(--muted);font-weight:400">내 순위</span></div>
+    <div id="allRankingsContent" style="display:flex;flex-direction:column;gap:8px">
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:12px">계산 중...</div>
+    </div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-ranking" onclick="showTab('ranking')">🏆 상세 랭킹</button>
+    <button class="btn-home" onclick="showTab('home')">🏠 홈으로</button>
+  </div>
+</div>
+
+<!-- RANKING -->
+<div class="screen hidden" id="rankingScreen">
+  <div class="app-header">
+    <div class="header-logo"><img src="data:image/jpeg;base64,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" alt="로고"/> 전체 랭킹</div>
+    <div style="font-size:12px;color:var(--sub)" id="rankSubTitle">누적 총점</div>
+  </div>
+  <div class="rank-body">
+    <div class="my-rank-card" id="myRankCard" style="display:none">
+      <div class="my-rank-num" id="myRankNum">#?</div>
+      <div class="my-rank-info">
+        <div class="my-rank-name" id="myRankName">나</div>
+        <div class="my-rank-score" id="myRankScore">0점</div>
+      </div>
+      <div style="font-size:28px">🔥</div>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="showTab('home')"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="startStudy()"><span class="nav-icon">📖</span>학습</button>
+    <button class="nav-item active"><span class="nav-icon">🏆</span>랭킹</button>
+    <button class="nav-item" onclick="showTab('profile')"><span class="nav-icon">👤</span>내 정보</button>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen hidden" id="profileScreen">
+  <div class="app-header">
+    <div class="header-logo"><img src="data:image/jpeg;base64,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" alt="로고"/> 내 정보</div>
+    <button style="background:none;border:none;font-size:13px;color:var(--sub);cursor:pointer" onclick="doLogout()">로그아웃</button>
+  </div>
+  <div class="scroll-area">
+    <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);color:#fff;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto" id="profileAvatar">?</div>
+    <div style="font-size:20px;font-weight:800;text-align:center" id="profileName">-</div>
+    <div style="font-size:13px;color:var(--sub);text-align:center" id="profileLangLabel">공부 중: 일본어</div>
+    <div class="stats-grid" style="width:100%">
+      <div class="stat-box"><div class="stat-n" id="pStreak">0</div><div class="stat-l">🔥 연속 학습</div></div>
+      <div class="stat-box"><div class="stat-n" id="pScore">0</div><div class="stat-l">⭐ 누적 점수</div></div>
+      <div class="stat-box"><div class="stat-n" id="pDays">0</div><div class="stat-l">📅 총 학습일</div></div>
+      <div class="stat-box"><div class="stat-n" id="pRank">-</div><div class="stat-l">🏆 현재 랭킹</div></div>
+    </div>
+    <button class="btn-full" onclick="startStudy()" style="width:100%">📖 오늘 학습 시작</button>
+    <button class="btn-guest" style="width:100%;margin-top:8px" onclick="showScreen('langSelectScreen')">🌐 언어 바꾸기</button>
+
+    <!-- 비밀번호 변경 -->
+    <div style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-top:4px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">🔒 비밀번호 변경</div>
+      <div class="field-wrap" style="margin-bottom:10px">
+        <div class="field-label">현재 비밀번호</div>
+        <input class="field-input" id="curPw" type="password" placeholder="현재 비밀번호"/>
+      </div>
+      <div class="field-wrap" style="margin-bottom:10px">
+        <div class="field-label">새 비밀번호</div>
+        <input class="field-input" id="newPw" type="password" placeholder="새 비밀번호 (6자 이상)"/>
+      </div>
+      <div class="err-msg" id="pwChangeErr" style="margin-bottom:8px">현재 비밀번호가 틀렸어요</div>
+      <button class="btn-full" style="height:44px;font-size:14px" onclick="changePw()">변경하기</button>
+    </div>
+
+    <!-- 닉네임 변경 (특권) -->
+    <div style="width:100%;border-radius:14px;padding:16px;margin-top:4px" id="nicknameSection">
+      <!-- JS로 채워짐 -->
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="showTab('home')"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="startStudy()"><span class="nav-icon">📖</span>학습</button>
+    <button class="nav-item" onclick="showTab('ranking')"><span class="nav-icon">🏆</span>랭킹</button>
+    <button class="nav-item active"><span class="nav-icon">👤</span>내 정보</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const LANG_INFO = {
+  ja:{name:'일본어',flag:'🇯🇵',tts:'ja-JP'},
+  en:{name:'영어',flag:'🇺🇸',tts:'en-US'},
+  zh:{name:'중국어',flag:'🇨🇳',tts:'zh-CN'},
+  es:{name:'스페인어',flag:'🇪🇸',tts:'es-ES'},
+  fr:{name:'프랑스어',flag:'🇫🇷',tts:'fr-FR'},
+};
+
+const LESSONS = {
+  // ══════════════════════════════════
+  // 🇯🇵 일본어 (10테마)
+  // ══════════════════════════════════
+  ja:[
+    {theme:'挨拶 (인사)',
+      words:[
+        {w:'おはよう',r:'おはよう',m:'좋은 아침'},
+        {w:'こんにちは',r:'こんにちは',m:'안녕하세요'},
+        {w:'ありがとう',r:'ありがとう',m:'감사합니다'},
+        {w:'すみません',r:'すみません',m:'실례합니다'},
+        {w:'さようなら',r:'さようなら',m:'안녕히 가세요'},
+      ],
+      sentences:[
+        {w:'おはようございます。',r:'おはようございます。',m:'좋은 아침입니다.'},
+        {w:'ありがとうございました。',r:'ありがとうございました。',m:'감사했습니다.'},
+        {w:'すみません、少々お待ちください。',r:'すみません、しょうしょうおまちください。',m:'실례합니다, 잠깐 기다려주세요.'},
+        {w:'こんにちは、お元気ですか？',r:'こんにちは、おげんきですか？',m:'안녕하세요, 잘 지내세요?'},
+        {w:'またお会いしましょう。',r:'またおあいしましょう。',m:'또 만납시다.'},
+      ]},
+    {theme:'数字 (숫자)',
+      words:[
+        {w:'いち',r:'いち',m:'1 (일)'},
+        {w:'に',r:'に',m:'2 (이)'},
+        {w:'さん',r:'さん',m:'3 (삼)'},
+        {w:'よん',r:'よん',m:'4 (사)'},
+        {w:'ご',r:'ご',m:'5 (오)'},
+      ],
+      sentences:[
+        {w:'りんごが三つあります。',r:'りんごがみっつあります。',m:'사과가 세 개 있습니다.'},
+        {w:'二時に会いましょう。',r:'にじにあいましょう。',m:'2시에 만납시다.'},
+        {w:'一番好きな色は何ですか？',r:'いちばんすきないろはなんですか？',m:'가장 좋아하는 색은 무엇입니까?'},
+        {w:'五人で行きます。',r:'ごにんでいきます。',m:'다섯 명이서 갑니다.'},
+        {w:'四月に日本へ行きます。',r:'しがつににほんへいきます。',m:'4월에 일본에 갑니다.'},
+      ]},
+    {theme:'食べ物 (음식)',
+      words:[
+        {w:'ごはん',r:'ごはん',m:'밥'},
+        {w:'ラーメン',r:'ラーメン',m:'라면'},
+        {w:'すし',r:'すし',m:'초밥'},
+        {w:'みず',r:'みず',m:'물'},
+        {w:'コーヒー',r:'コーヒー',m:'커피'},
+      ],
+      sentences:[
+        {w:'ごはんを食べましょう。',r:'ごはんをたべましょう。',m:'밥을 먹읍시다.'},
+        {w:'ラーメンが食べたいです。',r:'ラーメンがたべたいです。',m:'라면이 먹고 싶습니다.'},
+        {w:'すしは好きですか？',r:'すしはすきですか？',m:'초밥을 좋아하세요?'},
+        {w:'お水をください。',r:'おみずをください。',m:'물을 주세요.'},
+        {w:'コーヒーを一杯どうぞ。',r:'コーヒーをいっぱいどうぞ。',m:'커피 한 잔 드세요.'},
+      ]},
+    {theme:'場所 (장소)',
+      words:[
+        {w:'がっこう',r:'がっこう',m:'학교'},
+        {w:'えき',r:'えき',m:'역'},
+        {w:'スーパー',r:'スーパー',m:'슈퍼마켓'},
+        {w:'びょういん',r:'びょういん',m:'병원'},
+        {w:'いえ',r:'いえ',m:'집'},
+      ],
+      sentences:[
+        {w:'学校はどこですか？',r:'がっこうはどこですか？',m:'학교는 어디입니까?'},
+        {w:'駅まで歩いて五分です。',r:'えきまであるいてごふんです。',m:'역까지 걸어서 5분입니다.'},
+        {w:'スーパーで買い物します。',r:'スーパーでかいものします。',m:'슈퍼마켓에서 쇼핑합니다.'},
+        {w:'病院に行きます。',r:'びょういんにいきます。',m:'병원에 갑니다.'},
+        {w:'家に帰りましょう。',r:'いえにかえりましょう。',m:'집에 돌아갑시다.'},
+      ]},
+    {theme:'天気 (날씨)',
+      words:[
+        {w:'はれ',r:'はれ',m:'맑음'},
+        {w:'あめ',r:'あめ',m:'비'},
+        {w:'くもり',r:'くもり',m:'흐림'},
+        {w:'ゆき',r:'ゆき',m:'눈'},
+        {w:'かぜ',r:'かぜ',m:'바람'},
+      ],
+      sentences:[
+        {w:'今日はいい天気ですね。',r:'きょうはいいてんきですね。',m:'오늘은 날씨가 좋네요.'},
+        {w:'雨が降っています。',r:'あめがふっています。',m:'비가 내리고 있습니다.'},
+        {w:'明日は雪が降るでしょう。',r:'あしたはゆきがふるでしょう。',m:'내일은 눈이 올 것입니다.'},
+        {w:'風が強いです。',r:'かぜがつよいです。',m:'바람이 강합니다.'},
+        {w:'曇っていますね。',r:'くもっていますね。',m:'흐리네요.'},
+      ]},
+    {theme:'家族 (가족)',
+      words:[
+        {w:'おとうさん',r:'おとうさん',m:'아버지'},
+        {w:'おかあさん',r:'おかあさん',m:'어머니'},
+        {w:'あに',r:'あに',m:'형/오빠'},
+        {w:'いもうと',r:'いもうと',m:'여동생'},
+        {w:'かぞく',r:'かぞく',m:'가족'},
+      ],
+      sentences:[
+        {w:'父は会社員です。',r:'ちちはかいしゃいんです。',m:'아버지는 회사원입니다.'},
+        {w:'母は料理が上手です。',r:'はははりょうりがじょうずです。',m:'어머니는 요리를 잘 합니다.'},
+        {w:'兄は大学生です。',r:'あにはだいがくせいです。',m:'형은 대학생입니다.'},
+        {w:'妹はかわいいです。',r:'いもうとはかわいいです。',m:'여동생은 귀엽습니다.'},
+        {w:'家族と旅行します。',r:'かぞくとりょこうします。',m:'가족과 여행합니다.'},
+      ]},
+    {theme:'時間 (시간)',
+      words:[
+        {w:'あさ',r:'あさ',m:'아침'},
+        {w:'ひる',r:'ひる',m:'점심/낮'},
+        {w:'よる',r:'よる',m:'밤'},
+        {w:'きょう',r:'きょう',m:'오늘'},
+        {w:'あした',r:'あした',m:'내일'},
+      ],
+      sentences:[
+        {w:'毎朝六時に起きます。',r:'まいあさろくじにおきます。',m:'매일 아침 6시에 일어납니다.'},
+        {w:'昼ごはんは何時ですか？',r:'ひるごはんはなんじですか？',m:'점심은 몇 시입니까?'},
+        {w:'今日は忙しいです。',r:'きょうはいそがしいです。',m:'오늘은 바쁩니다.'},
+        {w:'明日また来てください。',r:'あしたまたきてください。',m:'내일 또 와 주세요.'},
+        {w:'夜遅く寝ます。',r:'よるおそくねます。',m:'밤 늦게 잡니다.'},
+      ]},
+    {theme:'色 (색깔)',
+      words:[
+        {w:'あか',r:'あか',m:'빨간색'},
+        {w:'あお',r:'あお',m:'파란색'},
+        {w:'しろ',r:'しろ',m:'흰색'},
+        {w:'くろ',r:'くろ',m:'검은색'},
+        {w:'きいろ',r:'きいろ',m:'노란색'},
+      ],
+      sentences:[
+        {w:'赤いりんごが好きです。',r:'あかいりんごがすきです。',m:'빨간 사과를 좋아합니다.'},
+        {w:'青い空がきれいです。',r:'あおいそらがきれいです。',m:'파란 하늘이 아름답습니다.'},
+        {w:'白いシャツを着ています。',r:'しろいシャツをきています。',m:'흰 셔츠를 입고 있습니다.'},
+        {w:'黒い猫がいます。',r:'くろいねこがいます。',m:'검은 고양이가 있습니다.'},
+        {w:'黄色い花が咲いています。',r:'きいろいはながさいています。',m:'노란 꽃이 피어 있습니다.'},
+      ]},
+    {theme:'動詞 (동사)',
+      words:[
+        {w:'たべる',r:'たべる',m:'먹다'},
+        {w:'のむ',r:'のむ',m:'마시다'},
+        {w:'いく',r:'いく',m:'가다'},
+        {w:'くる',r:'くる',m:'오다'},
+        {w:'みる',r:'みる',m:'보다'},
+      ],
+      sentences:[
+        {w:'朝ごはんを食べます。',r:'あさごはんをたべます。',m:'아침밥을 먹습니다.'},
+        {w:'水を飲んでください。',r:'みずをのんでください。',m:'물을 마셔주세요.'},
+        {w:'学校へ行きます。',r:'がっこうへいきます。',m:'학교에 갑니다.'},
+        {w:'友達が来ます。',r:'ともだちがきます。',m:'친구가 옵니다.'},
+        {w:'映画を見ます。',r:'えいがをみます。',m:'영화를 봅니다.'},
+      ]},
+    {theme:'形容詞 (형용사)',
+      words:[
+        {w:'おおきい',r:'おおきい',m:'크다'},
+        {w:'ちいさい',r:'ちいさい',m:'작다'},
+        {w:'あたらしい',r:'あたらしい',m:'새롭다'},
+        {w:'たのしい',r:'たのしい',m:'즐겁다'},
+        {w:'むずかしい',r:'むずかしい',m:'어렵다'},
+      ],
+      sentences:[
+        {w:'大きい犬がいます。',r:'おおきいいぬがいます。',m:'큰 개가 있습니다.'},
+        {w:'新しいスマホを買いました。',r:'あたらしいスマホをかいました。',m:'새 스마트폰을 샀습니다.'},
+        {w:'日本語は難しいですか？',r:'にほんごはむずかしいですか？',m:'일본어는 어렵습니까?'},
+        {w:'今日はとても楽しかったです。',r:'きょうはとてもたのしかったです。',m:'오늘은 매우 즐거웠습니다.'},
+        {w:'小さい子供がいます。',r:'ちいさいこどもがいます。',m:'작은 아이가 있습니다.'},
+      ]},
+  ],
+
+  // ══════════════════════════════════
+  // 🇺🇸 영어 (10테마)
+  // ══════════════════════════════════
+  en:[
+    {theme:'Greetings (인사)',
+      words:[
+        {w:'Hello',r:'Hello',m:'안녕하세요'},
+        {w:'Thank you',r:'Thank you',m:'감사합니다'},
+        {w:'Excuse me',r:'Excuse me',m:'실례합니다'},
+        {w:'Sorry',r:'Sorry',m:'죄송합니다'},
+        {w:'Goodbye',r:'Goodbye',m:'안녕히 가세요'},
+      ],
+      sentences:[
+        {w:'Good morning! How are you?',r:'Good morning! How are you?',m:'좋은 아침이에요! 어떻게 지내세요?'},
+        {w:'Nice to meet you.',r:'Nice to meet you.',m:'만나서 반갑습니다.'},
+        {w:'Thank you very much.',r:'Thank you very much.',m:'정말 감사합니다.'},
+        {w:'I am sorry for being late.',r:'I am sorry for being late.',m:'늦어서 죄송합니다.'},
+        {w:'See you tomorrow!',r:'See you tomorrow!',m:'내일 봐요!'},
+      ]},
+    {theme:'Numbers (숫자)',
+      words:[
+        {w:'one',r:'one',m:'1 (일)'},
+        {w:'two',r:'two',m:'2 (이)'},
+        {w:'three',r:'three',m:'3 (삼)'},
+        {w:'ten',r:'ten',m:'10 (십)'},
+        {w:'hundred',r:'hundred',m:'100 (백)'},
+      ],
+      sentences:[
+        {w:'I have two brothers.',r:'I have two brothers.',m:'저는 형제가 두 명 있어요.'},
+        {w:'She is ten years old.',r:'She is ten years old.',m:'그녀는 열 살입니다.'},
+        {w:'This costs one hundred dollars.',r:'This costs one hundred dollars.',m:'이것은 100달러입니다.'},
+        {w:'We need three more chairs.',r:'We need three more chairs.',m:'의자가 세 개 더 필요해요.'},
+        {w:'One plus one equals two.',r:'One plus one equals two.',m:'1 더하기 1은 2입니다.'},
+      ]},
+    {theme:'Food (음식)',
+      words:[
+        {w:'rice',r:'rice',m:'쌀/밥'},
+        {w:'bread',r:'bread',m:'빵'},
+        {w:'coffee',r:'coffee',m:'커피'},
+        {w:'water',r:'water',m:'물'},
+        {w:'salad',r:'salad',m:'샐러드'},
+      ],
+      sentences:[
+        {w:'I would like some water, please.',r:'I would like some water, please.',m:'물 좀 주세요.'},
+        {w:'Can I have the menu?',r:'Can I have the menu?',m:'메뉴 주시겠어요?'},
+        {w:'This bread is delicious.',r:'This bread is delicious.',m:'이 빵은 맛있어요.'},
+        {w:'I usually eat rice for lunch.',r:'I usually eat rice for lunch.',m:'저는 보통 점심에 밥을 먹어요.'},
+        {w:'A cup of coffee, please.',r:'A cup of coffee, please.',m:'커피 한 잔 주세요.'},
+      ]},
+    {theme:'Places (장소)',
+      words:[
+        {w:'school',r:'school',m:'학교'},
+        {w:'hospital',r:'hospital',m:'병원'},
+        {w:'station',r:'station',m:'역'},
+        {w:'airport',r:'airport',m:'공항'},
+        {w:'hotel',r:'hotel',m:'호텔'},
+      ],
+      sentences:[
+        {w:'Where is the nearest station?',r:'Where is the nearest station?',m:'가장 가까운 역이 어디예요?'},
+        {w:'I am going to the hospital.',r:'I am going to the hospital.',m:'병원에 가는 중이에요.'},
+        {w:'The school is near my house.',r:'The school is near my house.',m:'학교는 우리 집 근처에 있어요.'},
+        {w:'What time does the airport open?',r:'What time does the airport open?',m:'공항은 몇 시에 열어요?'},
+        {w:'I stayed at a nice hotel.',r:'I stayed at a nice hotel.',m:'좋은 호텔에 묵었어요.'},
+      ]},
+    {theme:'Weather (날씨)',
+      words:[
+        {w:'sunny',r:'sunny',m:'맑은'},
+        {w:'rainy',r:'rainy',m:'비오는'},
+        {w:'cloudy',r:'cloudy',m:'흐린'},
+        {w:'snowy',r:'snowy',m:'눈오는'},
+        {w:'windy',r:'windy',m:'바람 부는'},
+      ],
+      sentences:[
+        {w:'It is sunny today.',r:'It is sunny today.',m:'오늘은 날씨가 맑아요.'},
+        {w:'Take an umbrella. It is rainy.',r:'Take an umbrella. It is rainy.',m:'우산 가져가세요. 비가 와요.'},
+        {w:'It is very windy outside.',r:'It is very windy outside.',m:'밖이 매우 바람 불어요.'},
+        {w:'I love snowy weather.',r:'I love snowy weather.',m:'눈 오는 날씨를 좋아해요.'},
+        {w:'It is cloudy but warm.',r:'It is cloudy but warm.',m:'흐리지만 따뜻해요.'},
+      ]},
+    {theme:'Family (가족)',
+      words:[
+        {w:'father',r:'father',m:'아버지'},
+        {w:'mother',r:'mother',m:'어머니'},
+        {w:'brother',r:'brother',m:'남자 형제'},
+        {w:'sister',r:'sister',m:'여자 형제'},
+        {w:'family',r:'family',m:'가족'},
+      ],
+      sentences:[
+        {w:'My father works at a company.',r:'My father works at a company.',m:'아버지는 회사에서 일하세요.'},
+        {w:'My mother is a great cook.',r:'My mother is a great cook.',m:'어머니는 요리를 잘 하세요.'},
+        {w:'I have one sister and one brother.',r:'I have one sister and one brother.',m:'저는 여동생 한 명과 남동생 한 명이 있어요.'},
+        {w:'We go on vacation as a family.',r:'We go on vacation as a family.',m:'우리는 가족으로 휴가를 가요.'},
+        {w:'My sister is very kind.',r:'My sister is very kind.',m:'제 여동생은 매우 친절해요.'},
+      ]},
+    {theme:'Time (시간)',
+      words:[
+        {w:'morning',r:'morning',m:'아침'},
+        {w:'afternoon',r:'afternoon',m:'오후'},
+        {w:'evening',r:'evening',m:'저녁'},
+        {w:'today',r:'today',m:'오늘'},
+        {w:'tomorrow',r:'tomorrow',m:'내일'},
+      ],
+      sentences:[
+        {w:'I wake up early every morning.',r:'I wake up early every morning.',m:'저는 매일 아침 일찍 일어나요.'},
+        {w:'Let us meet this afternoon.',r:'Let us meet this afternoon.',m:'오늘 오후에 만납시다.'},
+        {w:'What are you doing tomorrow?',r:'What are you doing tomorrow?',m:'내일 뭐 할 거예요?'},
+        {w:'I am busy today.',r:'I am busy today.',m:'저는 오늘 바빠요.'},
+        {w:'Good evening, everyone.',r:'Good evening, everyone.',m:'안녕하세요, 여러분. (저녁)'},
+      ]},
+    {theme:'Colors (색깔)',
+      words:[
+        {w:'red',r:'red',m:'빨간색'},
+        {w:'blue',r:'blue',m:'파란색'},
+        {w:'green',r:'green',m:'초록색'},
+        {w:'yellow',r:'yellow',m:'노란색'},
+        {w:'white',r:'white',m:'흰색'},
+      ],
+      sentences:[
+        {w:'I like the color blue.',r:'I like the color blue.',m:'저는 파란색을 좋아해요.'},
+        {w:'The traffic light is red.',r:'The traffic light is red.',m:'신호등이 빨간색이에요.'},
+        {w:'The grass is green.',r:'The grass is green.',m:'잔디는 초록색이에요.'},
+        {w:'She wore a yellow dress.',r:'She wore a yellow dress.',m:'그녀는 노란 드레스를 입었어요.'},
+        {w:'The walls are painted white.',r:'The walls are painted white.',m:'벽이 흰색으로 칠해져 있어요.'},
+      ]},
+    {theme:'Verbs (동사)',
+      words:[
+        {w:'eat',r:'eat',m:'먹다'},
+        {w:'drink',r:'drink',m:'마시다'},
+        {w:'go',r:'go',m:'가다'},
+        {w:'come',r:'come',m:'오다'},
+        {w:'study',r:'study',m:'공부하다'},
+      ],
+      sentences:[
+        {w:'I eat breakfast every day.',r:'I eat breakfast every day.',m:'저는 매일 아침을 먹어요.'},
+        {w:'Please come here.',r:'Please come here.',m:'이리 오세요.'},
+        {w:'I go to school by bus.',r:'I go to school by bus.',m:'저는 버스로 학교에 가요.'},
+        {w:'I study English every lunch.',r:'I study English every lunch.',m:'저는 매일 점심에 영어를 공부해요.'},
+        {w:'Would you like to drink tea?',r:'Would you like to drink tea?',m:'차 드시겠어요?'},
+      ]},
+    {theme:'Adjectives (형용사)',
+      words:[
+        {w:'big',r:'big',m:'크다'},
+        {w:'small',r:'small',m:'작다'},
+        {w:'new',r:'new',m:'새로운'},
+        {w:'happy',r:'happy',m:'행복한'},
+        {w:'tired',r:'tired',m:'피곤한'},
+      ],
+      sentences:[
+        {w:'This is a big city.',r:'This is a big city.',m:'이것은 큰 도시예요.'},
+        {w:'I bought a new phone.',r:'I bought a new phone.',m:'새 폰을 샀어요.'},
+        {w:'I am very happy today.',r:'I am very happy today.',m:'오늘 매우 행복해요.'},
+        {w:'She looks tired.',r:'She looks tired.',m:'그녀는 피곤해 보여요.'},
+        {w:'It is a small world.',r:'It is a small world.',m:'세상은 좁아요.'},
+      ]},
+  ],
+
+  // ══════════════════════════════════
+  // 🇨🇳 중국어 (10테마)
+  // ══════════════════════════════════
+  zh:[
+    {theme:'问候 (인사)',
+      words:[
+        {w:'你好',r:'nǐ hǎo',m:'안녕하세요'},
+        {w:'谢谢',r:'xiè xiè',m:'감사합니다'},
+        {w:'对不起',r:'duì bu qǐ',m:'죄송합니다'},
+        {w:'再见',r:'zài jiàn',m:'안녕히 가세요'},
+        {w:'早上好',r:'zǎo shang hǎo',m:'좋은 아침'},
+      ],
+      sentences:[
+        {w:'你好，很高兴认识你。',r:'nǐ hǎo, hěn gāo xìng rèn shi nǐ.',m:'안녕하세요, 만나서 반갑습니다.'},
+        {w:'谢谢你的帮助。',r:'xiè xiè nǐ de bāng zhù.',m:'도와주셔서 감사합니다.'},
+        {w:'对不起，我来晚了。',r:'duì bu qǐ, wǒ lái wǎn le.',m:'죄송합니다, 늦었습니다.'},
+        {w:'再见，明天见。',r:'zài jiàn, míng tiān jiàn.',m:'안녕히 가세요, 내일 봐요.'},
+        {w:'早上好，吃早饭了吗？',r:'zǎo shang hǎo, chī zǎo fàn le ma?',m:'좋은 아침이에요, 아침 먹었어요?'},
+      ]},
+    {theme:'数字 (숫자)',
+      words:[
+        {w:'一',r:'yī',m:'1 (일)'},
+        {w:'二',r:'èr',m:'2 (이)'},
+        {w:'三',r:'sān',m:'3 (삼)'},
+        {w:'十',r:'shí',m:'10 (십)'},
+        {w:'百',r:'bǎi',m:'100 (백)'},
+      ],
+      sentences:[
+        {w:'我有两个哥哥。',r:'wǒ yǒu liǎng gè gē ge.',m:'저는 형이 두 명 있습니다.'},
+        {w:'今天是三月一号。',r:'jīn tiān shì sān yuè yī hào.',m:'오늘은 3월 1일입니다.'},
+        {w:'这个要一百块钱。',r:'zhè ge yào yī bǎi kuài qián.',m:'이것은 100위안입니다.'},
+        {w:'我们要十个人。',r:'wǒ men yào shí gè rén.',m:'우리는 10명이 필요합니다.'},
+        {w:'一加一等于二。',r:'yī jiā yī děng yú èr.',m:'1 더하기 1은 2입니다.'},
+      ]},
+    {theme:'食物 (음식)',
+      words:[
+        {w:'米饭',r:'mǐ fàn',m:'밥'},
+        {w:'面条',r:'miàn tiáo',m:'국수'},
+        {w:'咖啡',r:'kā fēi',m:'커피'},
+        {w:'水',r:'shuǐ',m:'물'},
+        {w:'饺子',r:'jiǎo zi',m:'만두'},
+      ],
+      sentences:[
+        {w:'我想吃米饭。',r:'wǒ xiǎng chī mǐ fàn.',m:'밥을 먹고 싶습니다.'},
+        {w:'请给我一杯水。',r:'qǐng gěi wǒ yī bēi shuǐ.',m:'물 한 잔 주세요.'},
+        {w:'这个咖啡很好喝。',r:'zhè ge kā fēi hěn hǎo hē.',m:'이 커피는 맛있어요.'},
+        {w:'我最喜欢吃饺子。',r:'wǒ zuì xǐ huān chī jiǎo zi.',m:'저는 만두를 가장 좋아합니다.'},
+        {w:'面条好吃吗？',r:'miàn tiáo hǎo chī ma?',m:'국수 맛있어요?'},
+      ]},
+    {theme:'地点 (장소)',
+      words:[
+        {w:'学校',r:'xué xiào',m:'학교'},
+        {w:'医院',r:'yī yuàn',m:'병원'},
+        {w:'超市',r:'chāo shì',m:'슈퍼마켓'},
+        {w:'车站',r:'chē zhàn',m:'역'},
+        {w:'家',r:'jiā',m:'집'},
+      ],
+      sentences:[
+        {w:'学校在哪里？',r:'xué xiào zài nǎ lǐ?',m:'학교는 어디에 있어요?'},
+        {w:'我要去医院看病。',r:'wǒ yào qù yī yuàn kàn bìng.',m:'병원에 진료 받으러 갑니다.'},
+        {w:'超市离这里很近。',r:'chāo shì lí zhè lǐ hěn jìn.',m:'슈퍼마켓은 여기서 가까워요.'},
+        {w:'车站怎么走？',r:'chē zhàn zěn me zǒu?',m:'역에 어떻게 가요?'},
+        {w:'我在家休息。',r:'wǒ zài jiā xiū xi.',m:'집에서 쉽니다.'},
+      ]},
+    {theme:'天气 (날씨)',
+      words:[
+        {w:'晴天',r:'qíng tiān',m:'맑은 날'},
+        {w:'下雨',r:'xià yǔ',m:'비가 내리다'},
+        {w:'下雪',r:'xià xuě',m:'눈이 내리다'},
+        {w:'刮风',r:'guā fēng',m:'바람이 불다'},
+        {w:'天气',r:'tiān qì',m:'날씨'},
+      ],
+      sentences:[
+        {w:'今天天气很好。',r:'jīn tiān tiān qì hěn hǎo.',m:'오늘 날씨가 좋아요.'},
+        {w:'外面在下雨，带伞吧。',r:'wài miàn zài xià yǔ, dài sǎn ba.',m:'밖에 비 오니까 우산 챙겨요.'},
+        {w:'明天会下雪吗？',r:'míng tiān huì xià xuě ma?',m:'내일 눈이 올까요?'},
+        {w:'今天刮大风。',r:'jīn tiān guā dà fēng.',m:'오늘 바람이 많이 불어요.'},
+        {w:'北京的天气怎么样？',r:'běi jīng de tiān qì zěn me yàng?',m:'베이징 날씨는 어때요?'},
+      ]},
+    {theme:'家庭 (가족)',
+      words:[
+        {w:'爸爸',r:'bà ba',m:'아버지'},
+        {w:'妈妈',r:'mā ma',m:'어머니'},
+        {w:'哥哥',r:'gē ge',m:'오빠/형'},
+        {w:'妹妹',r:'mèi mei',m:'여동생'},
+        {w:'家人',r:'jiā rén',m:'가족'},
+      ],
+      sentences:[
+        {w:'我爸爸是老师。',r:'wǒ bà ba shì lǎo shī.',m:'우리 아버지는 선생님입니다.'},
+        {w:'妈妈做饭很好吃。',r:'mā ma zuò fàn hěn hǎo chī.',m:'엄마가 만든 음식은 맛있어요.'},
+        {w:'我哥哥在大学读书。',r:'wǒ gē ge zài dà xué dú shū.',m:'우리 형은 대학에서 공부해요.'},
+        {w:'妹妹很可爱。',r:'mèi mei hěn kě ài.',m:'여동생은 매우 귀여워요.'},
+        {w:'我们全家一起旅行。',r:'wǒ men quán jiā yī qǐ lǚ xíng.',m:'우리 온 가족이 함께 여행해요.'},
+      ]},
+    {theme:'时间 (시간)',
+      words:[
+        {w:'早上',r:'zǎo shang',m:'아침'},
+        {w:'中午',r:'zhōng wǔ',m:'점심'},
+        {w:'晚上',r:'wǎn shang',m:'저녁'},
+        {w:'今天',r:'jīn tiān',m:'오늘'},
+        {w:'明天',r:'míng tiān',m:'내일'},
+      ],
+      sentences:[
+        {w:'我每天早上六点起床。',r:'wǒ měi tiān zǎo shang liù diǎn qǐ chuáng.',m:'저는 매일 아침 6시에 일어나요.'},
+        {w:'中午吃什么？',r:'zhōng wǔ chī shén me?',m:'점심에 뭐 먹어요?'},
+        {w:'今天很忙。',r:'jīn tiān hěn máng.',m:'오늘 매우 바빠요.'},
+        {w:'明天我们去哪里？',r:'míng tiān wǒ men qù nǎ lǐ?',m:'내일 우리 어디 가요?'},
+        {w:'晚上好，大家好。',r:'wǎn shang hǎo, dà jiā hǎo.',m:'안녕하세요, 여러분. (저녁)'},
+      ]},
+    {theme:'颜色 (색깔)',
+      words:[
+        {w:'红色',r:'hóng sè',m:'빨간색'},
+        {w:'蓝色',r:'lán sè',m:'파란색'},
+        {w:'绿色',r:'lǜ sè',m:'초록색'},
+        {w:'黄色',r:'huáng sè',m:'노란색'},
+        {w:'白色',r:'bái sè',m:'흰색'},
+      ],
+      sentences:[
+        {w:'我最喜欢红色。',r:'wǒ zuì xǐ huān hóng sè.',m:'저는 빨간색을 가장 좋아해요.'},
+        {w:'天空是蓝色的。',r:'tiān kōng shì lán sè de.',m:'하늘은 파란색이에요.'},
+        {w:'草是绿色的。',r:'cǎo shì lǜ sè de.',m:'풀은 초록색이에요.'},
+        {w:'她穿了一件黄色的裙子。',r:'tā chuān le yī jiàn huáng sè de qún zi.',m:'그녀는 노란 치마를 입었어요.'},
+        {w:'这堵墙是白色的。',r:'zhè dǔ qiáng shì bái sè de.',m:'이 벽은 흰색이에요.'},
+      ]},
+    {theme:'动词 (동사)',
+      words:[
+        {w:'吃',r:'chī',m:'먹다'},
+        {w:'喝',r:'hē',m:'마시다'},
+        {w:'去',r:'qù',m:'가다'},
+        {w:'来',r:'lái',m:'오다'},
+        {w:'学习',r:'xué xí',m:'공부하다'},
+      ],
+      sentences:[
+        {w:'我每天吃早饭。',r:'wǒ měi tiān chī zǎo fàn.',m:'저는 매일 아침을 먹어요.'},
+        {w:'请过来这里。',r:'qǐng guò lái zhè lǐ.',m:'이리 오세요.'},
+        {w:'我坐公共汽车去学校。',r:'wǒ zuò gōng gòng qì chē qù xué xiào.',m:'저는 버스를 타고 학교에 가요.'},
+        {w:'我每天午饭时间学中文。',r:'wǒ měi tiān wǔ fàn shí jiān xué zhōng wén.',m:'저는 매일 점심시간에 중국어를 공부해요.'},
+        {w:'你想喝什么？',r:'nǐ xiǎng hē shén me?',m:'뭐 마시고 싶어요?'},
+      ]},
+    {theme:'形容词 (형용사)',
+      words:[
+        {w:'大',r:'dà',m:'크다'},
+        {w:'小',r:'xiǎo',m:'작다'},
+        {w:'新',r:'xīn',m:'새롭다'},
+        {w:'高兴',r:'gāo xìng',m:'기쁘다'},
+        {w:'累',r:'lèi',m:'피곤하다'},
+      ],
+      sentences:[
+        {w:'这是一个大城市。',r:'zhè shì yī gè dà chéng shì.',m:'이것은 큰 도시예요.'},
+        {w:'我买了新手机。',r:'wǒ mǎi le xīn shǒu jī.',m:'새 핸드폰을 샀어요.'},
+        {w:'今天我很高兴。',r:'jīn tiān wǒ hěn gāo xìng.',m:'오늘 매우 기뻐요.'},
+        {w:'她看起来很累。',r:'tā kàn qǐ lái hěn lèi.',m:'그녀는 피곤해 보여요.'},
+        {w:'这个房间太小了。',r:'zhè ge fáng jiān tài xiǎo le.',m:'이 방은 너무 작아요.'},
+      ]},
+  ],
+
+  // ══════════════════════════════════
+  // 🇪🇸 스페인어 (10테마)
+  // ══════════════════════════════════
+  es:[
+    {theme:'Saludos (인사)',
+      words:[
+        {w:'Hola',r:'Hola',m:'안녕하세요'},
+        {w:'Gracias',r:'Gracias',m:'감사합니다'},
+        {w:'Perdón',r:'Perdón',m:'죄송합니다'},
+        {w:'Adiós',r:'Adiós',m:'안녕히 가세요'},
+        {w:'Por favor',r:'Por favor',m:'부탁합니다'},
+      ],
+      sentences:[
+        {w:'Hola, ¿cómo estás?',r:'Hola, ¿cómo estás?',m:'안녕하세요, 잘 지내세요?'},
+        {w:'Muchas gracias por tu ayuda.',r:'Muchas gracias por tu ayuda.',m:'도와주셔서 정말 감사합니다.'},
+        {w:'Perdón, ¿me puedes ayudar?',r:'Perdón, ¿me puedes ayudar?',m:'실례합니다, 도와주실 수 있어요?'},
+        {w:'¡Hasta mañana!',r:'¡Hasta mañana!',m:'내일 봐요!'},
+        {w:'Por favor, habla más despacio.',r:'Por favor, habla más despacio.',m:'부탁인데요, 좀 더 천천히 말해주세요.'},
+      ]},
+    {theme:'Números (숫자)',
+      words:[
+        {w:'uno',r:'uno',m:'1 (일)'},
+        {w:'dos',r:'dos',m:'2 (이)'},
+        {w:'tres',r:'tres',m:'3 (삼)'},
+        {w:'diez',r:'diez',m:'10 (십)'},
+        {w:'cien',r:'cien',m:'100 (백)'},
+      ],
+      sentences:[
+        {w:'Tengo dos hermanos.',r:'Tengo dos hermanos.',m:'저는 형제가 두 명 있어요.'},
+        {w:'Son las tres de la tarde.',r:'Son las tres de la tarde.',m:'오후 3시예요.'},
+        {w:'Cuesta cien euros.',r:'Cuesta cien euros.',m:'100유로입니다.'},
+        {w:'Necesitamos diez personas.',r:'Necesitamos diez personas.',m:'10명이 필요해요.'},
+        {w:'Uno más uno son dos.',r:'Uno más uno son dos.',m:'1 더하기 1은 2예요.'},
+      ]},
+    {theme:'Comida (음식)',
+      words:[
+        {w:'arroz',r:'arroz',m:'쌀/밥'},
+        {w:'pan',r:'pan',m:'빵'},
+        {w:'café',r:'café',m:'커피'},
+        {w:'agua',r:'agua',m:'물'},
+        {w:'paella',r:'paella',m:'빠에야'},
+      ],
+      sentences:[
+        {w:'¿Me trae un vaso de agua?',r:'¿Me trae un vaso de agua?',m:'물 한 잔 주시겠어요?'},
+        {w:'Este pan está delicioso.',r:'Este pan está delicioso.',m:'이 빵은 맛있어요.'},
+        {w:'Normalmente como arroz al mediodía.',r:'Normalmente como arroz al mediodía.',m:'저는 보통 점심에 밥을 먹어요.'},
+        {w:'Un café, por favor.',r:'Un café, por favor.',m:'커피 한 잔 주세요.'},
+        {w:'La paella es típica de España.',r:'La paella es típica de España.',m:'빠에야는 스페인의 전통 음식이에요.'},
+      ]},
+    {theme:'Lugares (장소)',
+      words:[
+        {w:'escuela',r:'escuela',m:'학교'},
+        {w:'hospital',r:'hospital',m:'병원'},
+        {w:'estación',r:'estación',m:'역'},
+        {w:'aeropuerto',r:'aeropuerto',m:'공항'},
+        {w:'casa',r:'casa',m:'집'},
+      ],
+      sentences:[
+        {w:'¿Dónde está la estación?',r:'¿Dónde está la estación?',m:'역이 어디에 있어요?'},
+        {w:'Voy al hospital.',r:'Voy al hospital.',m:'병원에 갑니다.'},
+        {w:'La escuela está cerca.',r:'La escuela está cerca.',m:'학교는 가까워요.'},
+        {w:'El aeropuerto abre a las cinco.',r:'El aeropuerto abre a las cinco.',m:'공항은 5시에 열어요.'},
+        {w:'Estoy en casa descansando.',r:'Estoy en casa descansando.',m:'집에서 쉬고 있어요.'},
+      ]},
+    {theme:'Tiempo (날씨)',
+      words:[
+        {w:'soleado',r:'soleado',m:'맑은'},
+        {w:'lluvioso',r:'lluvioso',m:'비오는'},
+        {w:'nublado',r:'nublado',m:'흐린'},
+        {w:'nevado',r:'nevado',m:'눈오는'},
+        {w:'viento',r:'viento',m:'바람'},
+      ],
+      sentences:[
+        {w:'Hoy hace sol.',r:'Hoy hace sol.',m:'오늘은 날씨가 맑아요.'},
+        {w:'Lleva paraguas. Está lloviendo.',r:'Lleva paraguas. Está lloviendo.',m:'우산 챙겨요. 비가 와요.'},
+        {w:'Hace mucho viento hoy.',r:'Hace mucho viento hoy.',m:'오늘 바람이 많이 불어요.'},
+        {w:'Me encanta la nieve.',r:'Me encanta la nieve.',m:'눈 오는 날씨를 좋아해요.'},
+        {w:'Está nublado pero cálido.',r:'Está nublado pero cálido.',m:'흐리지만 따뜻해요.'},
+      ]},
+    {theme:'Familia (가족)',
+      words:[
+        {w:'padre',r:'padre',m:'아버지'},
+        {w:'madre',r:'madre',m:'어머니'},
+        {w:'hermano',r:'hermano',m:'남자 형제'},
+        {w:'hermana',r:'hermana',m:'여자 형제'},
+        {w:'familia',r:'familia',m:'가족'},
+      ],
+      sentences:[
+        {w:'Mi padre trabaja en una empresa.',r:'Mi padre trabaja en una empresa.',m:'아버지는 회사에서 일하세요.'},
+        {w:'Mi madre cocina muy bien.',r:'Mi madre cocina muy bien.',m:'어머니는 요리를 잘 하세요.'},
+        {w:'Tengo un hermano y una hermana.',r:'Tengo un hermano y una hermana.',m:'남동생 한 명과 여동생 한 명이 있어요.'},
+        {w:'Salimos de vacaciones en familia.',r:'Salimos de vacaciones en familia.',m:'가족으로 휴가를 떠나요.'},
+        {w:'Mi hermana es muy simpática.',r:'Mi hermana es muy simpática.',m:'제 여동생은 매우 친절해요.'},
+      ]},
+    {theme:'Tiempo (시간)',
+      words:[
+        {w:'mañana',r:'mañana',m:'아침/내일'},
+        {w:'mediodía',r:'mediodía',m:'정오/점심'},
+        {w:'noche',r:'noche',m:'밤'},
+        {w:'hoy',r:'hoy',m:'오늘'},
+        {w:'tarde',r:'tarde',m:'오후/저녁'},
+      ],
+      sentences:[
+        {w:'Me levanto temprano por la mañana.',r:'Me levanto temprano por la mañana.',m:'아침 일찍 일어나요.'},
+        {w:'¿Quedamos esta tarde?',r:'¿Quedamos esta tarde?',m:'오늘 오후에 만날까요?'},
+        {w:'¿Qué vas a hacer mañana?',r:'¿Qué vas a hacer mañana?',m:'내일 뭐 할 거예요?'},
+        {w:'Hoy estoy muy ocupado.',r:'Hoy estoy muy ocupado.',m:'오늘 매우 바빠요.'},
+        {w:'Buenas noches a todos.',r:'Buenas noches a todos.',m:'모두 안녕히 주무세요.'},
+      ]},
+    {theme:'Colores (색깔)',
+      words:[
+        {w:'rojo',r:'rojo',m:'빨간색'},
+        {w:'azul',r:'azul',m:'파란색'},
+        {w:'verde',r:'verde',m:'초록색'},
+        {w:'amarillo',r:'amarillo',m:'노란색'},
+        {w:'blanco',r:'blanco',m:'흰색'},
+      ],
+      sentences:[
+        {w:'Me gusta el color rojo.',r:'Me gusta el color rojo.',m:'빨간색을 좋아해요.'},
+        {w:'El cielo es azul.',r:'El cielo es azul.',m:'하늘은 파란색이에요.'},
+        {w:'El césped es verde.',r:'El césped es verde.',m:'잔디는 초록색이에요.'},
+        {w:'Ella llevaba un vestido amarillo.',r:'Ella llevaba un vestido amarillo.',m:'그녀는 노란 드레스를 입었어요.'},
+        {w:'Las paredes son blancas.',r:'Las paredes son blancas.',m:'벽이 흰색이에요.'},
+      ]},
+    {theme:'Verbos (동사)',
+      words:[
+        {w:'comer',r:'comer',m:'먹다'},
+        {w:'beber',r:'beber',m:'마시다'},
+        {w:'ir',r:'ir',m:'가다'},
+        {w:'venir',r:'venir',m:'오다'},
+        {w:'estudiar',r:'estudiar',m:'공부하다'},
+      ],
+      sentences:[
+        {w:'Como el desayuno todos los días.',r:'Como el desayuno todos los días.',m:'저는 매일 아침을 먹어요.'},
+        {w:'Por favor, ven aquí.',r:'Por favor, ven aquí.',m:'이리 오세요.'},
+        {w:'Voy al colegio en autobús.',r:'Voy al colegio en autobús.',m:'버스를 타고 학교에 가요.'},
+        {w:'Estudio español cada día.',r:'Estudio español cada día.',m:'저는 매일 스페인어를 공부해요.'},
+        {w:'¿Quieres beber algo?',r:'¿Quieres beber algo?',m:'뭔가 마시고 싶어요?'},
+      ]},
+    {theme:'Adjetivos (형용사)',
+      words:[
+        {w:'grande',r:'grande',m:'크다'},
+        {w:'pequeño',r:'pequeño',m:'작다'},
+        {w:'nuevo',r:'nuevo',m:'새로운'},
+        {w:'feliz',r:'feliz',m:'행복한'},
+        {w:'cansado',r:'cansado',m:'피곤한'},
+      ],
+      sentences:[
+        {w:'Esta es una ciudad grande.',r:'Esta es una ciudad grande.',m:'이것은 큰 도시예요.'},
+        {w:'Compré un teléfono nuevo.',r:'Compré un teléfono nuevo.',m:'새 폰을 샀어요.'},
+        {w:'Hoy estoy muy feliz.',r:'Hoy estoy muy feliz.',m:'오늘 매우 행복해요.'},
+        {w:'Ella parece cansada.',r:'Ella parece cansada.',m:'그녀는 피곤해 보여요.'},
+        {w:'El cuarto es demasiado pequeño.',r:'El cuarto es demasiado pequeño.',m:'방이 너무 작아요.'},
+      ]},
+  ],
+
+  // ══════════════════════════════════
+  // 🇫🇷 프랑스어 (10테마)
+  // ══════════════════════════════════
+  fr:[
+    {theme:'Salutations (인사)',
+      words:[
+        {w:'Bonjour',r:'Bonjour',m:'안녕하세요'},
+        {w:'Merci',r:'Merci',m:'감사합니다'},
+        {w:'Pardon',r:'Pardon',m:'죄송합니다'},
+        {w:'Au revoir',r:'Au revoir',m:'안녕히 가세요'},
+        {w:'S\'il vous plaît',r:'S\'il vous plaît',m:'부탁합니다'},
+      ],
+      sentences:[
+        {w:'Bonjour, comment allez-vous?',r:'Bonjour, comment allez-vous?',m:'안녕하세요, 잘 지내세요?'},
+        {w:'Merci beaucoup pour votre aide.',r:'Merci beaucoup pour votre aide.',m:'도와주셔서 정말 감사합니다.'},
+        {w:'Pardon, pouvez-vous m\'aider?',r:'Pardon, pouvez-vous m\'aider?',m:'실례합니다, 도와주실 수 있어요?'},
+        {w:'À demain!',r:'À demain!',m:'내일 봐요!'},
+        {w:'S\'il vous plaît, parlez lentement.',r:'S\'il vous plaît, parlez lentement.',m:'부탁인데요, 천천히 말씀해 주세요.'},
+      ]},
+    {theme:'Nombres (숫자)',
+      words:[
+        {w:'un',r:'un',m:'1 (일)'},
+        {w:'deux',r:'deux',m:'2 (이)'},
+        {w:'trois',r:'trois',m:'3 (삼)'},
+        {w:'dix',r:'dix',m:'10 (십)'},
+        {w:'cent',r:'cent',m:'100 (백)'},
+      ],
+      sentences:[
+        {w:'J\'ai deux frères.',r:'J\'ai deux frères.',m:'저는 형제가 두 명 있어요.'},
+        {w:'Il est trois heures.',r:'Il est trois heures.',m:'3시예요.'},
+        {w:'Ça coûte cent euros.',r:'Ça coûte cent euros.',m:'100유로입니다.'},
+        {w:'Nous avons besoin de dix personnes.',r:'Nous avons besoin de dix personnes.',m:'10명이 필요해요.'},
+        {w:'Un plus un égale deux.',r:'Un plus un égale deux.',m:'1 더하기 1은 2예요.'},
+      ]},
+    {theme:'Nourriture (음식)',
+      words:[
+        {w:'riz',r:'riz',m:'쌀/밥'},
+        {w:'pain',r:'pain',m:'빵'},
+        {w:'café',r:'café',m:'커피'},
+        {w:'eau',r:'eau',m:'물'},
+        {w:'croissant',r:'croissant',m:'크루아상'},
+      ],
+      sentences:[
+        {w:'Un verre d\'eau, s\'il vous plaît.',r:'Un verre d\'eau, s\'il vous plaît.',m:'물 한 잔 주세요.'},
+        {w:'Ce pain est délicieux.',r:'Ce pain est délicieux.',m:'이 빵은 맛있어요.'},
+        {w:'Je mange du riz à midi.',r:'Je mange du riz à midi.',m:'저는 점심에 밥을 먹어요.'},
+        {w:'Un café, s\'il vous plaît.',r:'Un café, s\'il vous plaît.',m:'커피 한 잔 주세요.'},
+        {w:'Le croissant est typiquement français.',r:'Le croissant est typiquement français.',m:'크루아상은 프랑스의 대표 음식이에요.'},
+      ]},
+    {theme:'Lieux (장소)',
+      words:[
+        {w:'école',r:'école',m:'학교'},
+        {w:'hôpital',r:'hôpital',m:'병원'},
+        {w:'gare',r:'gare',m:'역'},
+        {w:'aéroport',r:'aéroport',m:'공항'},
+        {w:'maison',r:'maison',m:'집'},
+      ],
+      sentences:[
+        {w:'Où est la gare?',r:'Où est la gare?',m:'역이 어디에 있어요?'},
+        {w:'Je vais à l\'hôpital.',r:'Je vais à l\'hôpital.',m:'병원에 갑니다.'},
+        {w:'L\'école est près d\'ici.',r:'L\'école est près d\'ici.',m:'학교는 여기서 가까워요.'},
+        {w:'L\'aéroport ouvre à cinq heures.',r:'L\'aéroport ouvre à cinq heures.',m:'공항은 5시에 열어요.'},
+        {w:'Je me repose à la maison.',r:'Je me repose à la maison.',m:'집에서 쉬고 있어요.'},
+      ]},
+    {theme:'Météo (날씨)',
+      words:[
+        {w:'ensoleillé',r:'ensoleillé',m:'맑은'},
+        {w:'pluvieux',r:'pluvieux',m:'비오는'},
+        {w:'nuageux',r:'nuageux',m:'흐린'},
+        {w:'neigeux',r:'neigeux',m:'눈오는'},
+        {w:'vent',r:'vent',m:'바람'},
+      ],
+      sentences:[
+        {w:'Il fait beau aujourd\'hui.',r:'Il fait beau aujourd\'hui.',m:'오늘은 날씨가 맑아요.'},
+        {w:'Prends un parapluie, il pleut.',r:'Prends un parapluie, il pleut.',m:'우산 챙겨요, 비가 와요.'},
+        {w:'Il y a beaucoup de vent.',r:'Il y a beaucoup de vent.',m:'바람이 많이 불어요.'},
+        {w:'J\'aime la neige.',r:'J\'aime la neige.',m:'눈 오는 날씨를 좋아해요.'},
+        {w:'C\'est nuageux mais chaud.',r:'C\'est nuageux mais chaud.',m:'흐리지만 따뜻해요.'},
+      ]},
+    {theme:'Famille (가족)',
+      words:[
+        {w:'père',r:'père',m:'아버지'},
+        {w:'mère',r:'mère',m:'어머니'},
+        {w:'frère',r:'frère',m:'남자 형제'},
+        {w:'sœur',r:'sœur',m:'여자 형제'},
+        {w:'famille',r:'famille',m:'가족'},
+      ],
+      sentences:[
+        {w:'Mon père travaille dans une entreprise.',r:'Mon père travaille dans une entreprise.',m:'아버지는 회사에서 일하세요.'},
+        {w:'Ma mère cuisine très bien.',r:'Ma mère cuisine très bien.',m:'어머니는 요리를 잘 하세요.'},
+        {w:'J\'ai un frère et une sœur.',r:'J\'ai un frère et une sœur.',m:'남동생 한 명과 여동생 한 명이 있어요.'},
+        {w:'On part en vacances en famille.',r:'On part en vacances en famille.',m:'가족으로 휴가를 떠나요.'},
+        {w:'Ma sœur est très gentille.',r:'Ma sœur est très gentille.',m:'제 여동생은 매우 친절해요.'},
+      ]},
+    {theme:'Temps (시간)',
+      words:[
+        {w:'matin',r:'matin',m:'아침'},
+        {w:'midi',r:'midi',m:'정오/점심'},
+        {w:'soir',r:'soir',m:'저녁'},
+        {w:'aujourd\'hui',r:'aujourd\'hui',m:'오늘'},
+        {w:'demain',r:'demain',m:'내일'},
+      ],
+      sentences:[
+        {w:'Je me lève tôt le matin.',r:'Je me lève tôt le matin.',m:'아침 일찍 일어나요.'},
+        {w:'On se retrouve cet après-midi?',r:'On se retrouve cet après-midi?',m:'오늘 오후에 만날까요?'},
+        {w:'Qu\'est-ce que tu fais demain?',r:'Qu\'est-ce que tu fais demain?',m:'내일 뭐 할 거예요?'},
+        {w:'Je suis très occupé aujourd\'hui.',r:'Je suis très occupé aujourd\'hui.',m:'오늘 매우 바빠요.'},
+        {w:'Bonne nuit à tous.',r:'Bonne nuit à tous.',m:'모두 안녕히 주무세요.'},
+      ]},
+    {theme:'Couleurs (색깔)',
+      words:[
+        {w:'rouge',r:'rouge',m:'빨간색'},
+        {w:'bleu',r:'bleu',m:'파란색'},
+        {w:'vert',r:'vert',m:'초록색'},
+        {w:'jaune',r:'jaune',m:'노란색'},
+        {w:'blanc',r:'blanc',m:'흰색'},
+      ],
+      sentences:[
+        {w:'J\'aime la couleur rouge.',r:'J\'aime la couleur rouge.',m:'빨간색을 좋아해요.'},
+        {w:'Le ciel est bleu.',r:'Le ciel est bleu.',m:'하늘은 파란색이에요.'},
+        {w:'L\'herbe est verte.',r:'L\'herbe est verte.',m:'풀은 초록색이에요.'},
+        {w:'Elle portait une robe jaune.',r:'Elle portait une robe jaune.',m:'그녀는 노란 드레스를 입었어요.'},
+        {w:'Les murs sont blancs.',r:'Les murs sont blancs.',m:'벽이 흰색이에요.'},
+      ]},
+    {theme:'Verbes (동사)',
+      words:[
+        {w:'manger',r:'manger',m:'먹다'},
+        {w:'boire',r:'boire',m:'마시다'},
+        {w:'aller',r:'aller',m:'가다'},
+        {w:'venir',r:'venir',m:'오다'},
+        {w:'étudier',r:'étudier',m:'공부하다'},
+      ],
+      sentences:[
+        {w:'Je mange le petit-déjeuner tous les jours.',r:'Je mange le petit-déjeuner tous les jours.',m:'저는 매일 아침을 먹어요.'},
+        {w:'Venez ici, s\'il vous plaît.',r:'Venez ici, s\'il vous plaît.',m:'이리 오세요.'},
+        {w:'Je vais à l\'école en bus.',r:'Je vais à l\'école en bus.',m:'버스를 타고 학교에 가요.'},
+        {w:'J\'étudie le français chaque jour.',r:'J\'étudie le français chaque jour.',m:'저는 매일 프랑스어를 공부해요.'},
+        {w:'Voulez-vous boire quelque chose?',r:'Voulez-vous boire quelque chose?',m:'뭔가 마시고 싶어요?'},
+      ]},
+    {theme:'Adjectifs (형용사)',
+      words:[
+        {w:'grand',r:'grand',m:'크다'},
+        {w:'petit',r:'petit',m:'작다'},
+        {w:'nouveau',r:'nouveau',m:'새로운'},
+        {w:'heureux',r:'heureux',m:'행복한'},
+        {w:'fatigué',r:'fatigué',m:'피곤한'},
+      ],
+      sentences:[
+        {w:'C\'est une grande ville.',r:'C\'est une grande ville.',m:'이것은 큰 도시예요.'},
+        {w:'J\'ai acheté un nouveau téléphone.',r:'J\'ai acheté un nouveau téléphone.',m:'새 폰을 샀어요.'},
+        {w:'Je suis très heureux aujourd\'hui.',r:'Je suis très heureux aujourd\'hui.',m:'오늘 매우 행복해요.'},
+        {w:'Elle a l\'air fatiguée.',r:'Elle a l\'air fatiguée.',m:'그녀는 피곤해 보여요.'},
+        {w:'La chambre est trop petite.',r:'La chambre est trop petite.',m:'방이 너무 작아요.'},
+      ]},
+  ],
+};
+
+// ── STATE ──
+let currentUser = null;
+let selectedLangCode = 'ja';
+let studyStep = 0;
+let currentLesson = null;
+let quizItems = [];
+let quizIdx = 0;
+let quizResults = [];
+let speakingId = null;
+let quizAnswered = false;
+
+// ── SUPABASE ──
+const SB_URL = 'https://jkkrwyvrulmiqukroogt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impra3J3eXZydWxtaXF1a3Jvb2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODQwODUsImV4cCI6MjA5NjU2MDA4NX0.jjRBcM9b19hgTwGpF7smqctv2GTRAv5EJqTB_JKtECM';
+
+async function sbFetch(path, method='GET', body=null){
+  try{
+    const opts={method,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'resolution=merge-duplicates':''}} ;
+    if(body) opts.body=JSON.stringify(body);
+    const r=await fetch(SB_URL+path,opts);
+    const text=await r.text();
+    return text?JSON.parse(text):[];
+  }catch(e){console.error('sbFetch error:',e);return null;}
+}
+
+// ── STORAGE ──
+const SESSION_KEY = 'lunchapp_session_v2';
+function getUsers(){ try{return JSON.parse(localStorage.getItem('lunchapp_users_v2')||'{}');}catch{return {};} }
+function saveUsers(u){ try{localStorage.setItem('lunchapp_users_v2',JSON.stringify(u));}catch{} }
+function getSession(){ try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{return null;} }
+function saveSession(id){ try{localStorage.setItem(SESSION_KEY,JSON.stringify(id));}catch{} }
+function getCachedUser(id){ try{return JSON.parse(localStorage.getItem('uc_'+id)||'null');}catch{return null;} }
+function setCachedUser(id,data){ try{localStorage.setItem('uc_'+id,JSON.stringify(data));}catch{} }
+
+async function getUser(id){
+  try{
+    const rows=await sbFetch(`/rest/v1/users?id=eq.${encodeURIComponent(id)}&select=*`);
+    if(rows&&rows.length>0){setCachedUser(id,rows[0]);return rows[0];}
+  }catch(e){console.error('getUser:',e);}
+  // localStorage fallback
+  const users=getUsers();
+  return users[id]||getCachedUser(id);
+}
+
+async function upsertUser(data){
+  setCachedUser(data.id,data);
+  // localStorage에도 저장 (fallback)
+  const users=getUsers();
+  users[data.id]=data;
+  saveUsers(users);
+  try{await sbFetch('/rest/v1/users','POST',data);}catch(e){console.error('upsertUser:',e);}
+}
+
+async function getRanking(lang){
+  const lg=lang||'ja';
+  try{
+    const rows=await sbFetch(`/rest/v1/rankings?lang=eq.${lg}&select=user_id,score&order=score.desc&limit=50`);
+    if(rows&&rows.length>0){const obj={};rows.forEach(r=>obj[r.user_id]=r.score);localStorage.setItem('local_rank_'+lg,JSON.stringify(obj));return obj;}
+  }catch(e){console.error('getRanking:',e);}
+  try{return JSON.parse(localStorage.getItem('local_rank_'+lg)||'{}');}catch{return{};}
+}
+async function saveRanking(data,lang){
+  const lg=lang||'ja';
+  try{localStorage.setItem('local_rank_'+lg,JSON.stringify(data));}catch{}
+  if(!currentUser||currentUser.isGuest)return;
+  try{await sbFetch('/rest/v1/rankings','POST',{user_id:currentUser.id,lang:lg,score:data[currentUser.id]||0,updated_at:new Date().toISOString()});}catch(e){console.error('saveRanking:',e);}
+}
+
+// ── NAV ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  const el=document.getElementById(id);
+  if(el) el.style.display='flex';
+}
+function showTab(tab){
+  const map={home:'homeScreen',ranking:'rankingScreen',profile:'profileScreen'};
+  if(!map[tab])return;
+  if(tab==='ranking')loadRanking();
+  if(tab==='profile')loadProfile();
+  if(tab==='home')loadHome();
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById(map[tab]).style.display='flex';
+}
+
+// ── AUTH ──
+function switchTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('signupForm').style.display=tab==='signup'?'block':'none';
+}
+async function doLogin(){
+  const id=document.getElementById('loginId').value.trim();
+  const pw=document.getElementById('loginPw').value;
+  const u=await getUser(id);
+  if(!u||u.pw!==pw){document.getElementById('loginErr').style.display='block';return;}
+  document.getElementById('loginErr').style.display='none';
+  selectedLangCode=u.lang||'ja';
+  loginSuccess(id,u);
+}
+function doSignup(){
+  const id=document.getElementById('signupId').value.trim();
+  const pw=document.getElementById('signupPw').value;
+  if(!id){showToast('닉네임을 입력해주세요');return;}
+  if(pw.length<6){document.getElementById('signupPwErr').style.display='block';return;}
+  document.getElementById('signupPwErr').style.display='none';
+  const users=getUsers();
+  if(users[id]){document.getElementById('signupIdErr').style.display='block';return;}
+  document.getElementById('signupIdErr').style.display='none';
+  users[id]={pw,score:0,scores:{},streak:0,days:0,lastDate:'',lang:'ja',isGuest:false};
+  saveUsers(users);
+  // 회원가입 후 → 언어 선택 화면
+  currentUser={id,...users[id]};
+  saveSession(id);
+  showScreen('langSelectScreen');
+}
+function doGuest(){
+  const gid='게스트_'+Math.floor(Math.random()*9000+1000);
+  const users=getUsers();
+  users[gid]={pw:'',score:0,streak:0,days:0,lastDate:'',lang:'ja',isGuest:true};
+  saveUsers(users);
+  currentUser={id:gid,...users[gid]};
+  saveSession(gid);
+  showScreen('langSelectScreen');
+  showToast('게스트 모드 — 랭킹은 제외돼요');
+}
+function loginSuccess(id, userData){
+  if(!userData){
+    // localStorage fallback
+    const users=getUsers();
+    userData=users[id]||{};
+  }
+  currentUser={
+    id,
+    pw:userData.pw||'',
+    score:userData.score||0,
+    scores:userData.scores||{},
+    streak:userData.streak||0,
+    days:userData.days||0,
+    lastDate:userData.last_date||userData.lastDate||'',
+    lang:userData.lang||'ja',
+    isGuest:userData.is_guest||userData.isGuest||false
+  };
+  saveSession(id);
+  updateStreak();
+  loadHome();
+  showScreen('homeScreen');
+}
+function doLogout(){currentUser=null;saveSession(null);showScreen('splashScreen');}
+async function updateStreak(){
+  if(!currentUser)return;
+  const today=new Date().toISOString().slice(0,10);
+  if(currentUser.lastDate===today)return;
+  const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  currentUser.streak=currentUser.lastDate===yesterday?(currentUser.streak||0)+1:1;
+  currentUser.lastDate=today;currentUser.days=(currentUser.days||0)+1;
+  const d={id:currentUser.id,pw:currentUser.pw||'',score:currentUser.score||0,scores:currentUser.scores||{},streak:currentUser.streak,days:currentUser.days,last_date:today,lang:currentUser.lang||'ja',is_guest:currentUser.isGuest||false};
+  const users=getUsers();users[currentUser.id]=d;saveUsers(users);
+  if(!currentUser.isGuest) upsertUser(d);
+}
+
+// ── LANG SELECT ──
+function selectLang(el){
+  document.querySelectorAll('.lang-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedLangCode=el.dataset.lang;
+}
+async function confirmLang(){
+  if(!currentUser)return;
+  selectedLangCode=document.querySelector('.lang-option.selected')?.dataset.lang||'ja';
+  currentUser.lang=selectedLangCode;
+  const users=getUsers();
+  if(users[currentUser.id]){users[currentUser.id].lang=selectedLangCode;saveUsers(users);}
+  const li=LANG_INFO[selectedLangCode];
+  const flagEl=document.getElementById('homeLangFlag');
+  const nameEl=document.getElementById('homeLangName');
+  if(flagEl&&li) flagEl.textContent=li.flag;
+  if(nameEl&&li) nameEl.textContent=li.name;
+  if(!currentUser.isGuest){
+    const d={id:currentUser.id,pw:currentUser.pw||'',score:currentUser.score||0,scores:currentUser.scores||{},streak:currentUser.streak||0,days:currentUser.days||0,last_date:currentUser.lastDate||'',lang:selectedLangCode,is_guest:false};
+    upsertUser(d);
+  }
+  await updateStreak();loadHome();showScreen('homeScreen');
+}
+
+// ── HOME ──
+async function loadHome(){
+  if(!currentUser)return;
+  const today=new Date();
+  document.getElementById('todayDate').textContent=today.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  const lang=currentUser.lang||selectedLangCode||'ja';
+  const lessons=LESSONS[lang]||LESSONS.ja;
+  const dayIdx=Math.floor((today-new Date(today.getFullYear(),today.getMonth(),1))/(86400000))%lessons.length;
+  const li=lessons[dayIdx];
+  document.getElementById('todayTheme').textContent=`오늘의 테마: ${li.theme}`;
+  const av=currentUser.id.replace(/[^가-힣a-zA-Z]/g,'');
+  document.getElementById('homeAvatar').textContent=av?av[0].toUpperCase():'👤';
+  document.getElementById('homeStreak').textContent=currentUser.streak||0;
+  document.getElementById('statStreak').textContent=currentUser.streak||0;
+  document.getElementById('statTotal').textContent=currentUser.days||0;
+  const curLg=currentUser.lang||'ja';
+  const langScore=(currentUser.scores&&currentUser.scores[curLg])||0;
+  document.getElementById('statScore').textContent=langScore;
+  await updateRankDisplay();
+}
+async function updateRankDisplay(){
+  const el=document.getElementById('statRank');
+  if(!el)return;
+  if(!currentUser||currentUser.isGuest){el.textContent='-';return;}
+  el.textContent='...';
+  const lg=currentUser.lang||'ja';
+  const myScore=(currentUser.scores&&currentUser.scores[lg])||0;
+  const ranking=await getRanking(lg);
+  if(myScore>0) ranking[currentUser.id]=myScore;
+  await saveRanking(ranking,lg);
+  const sorted=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
+  const myIdx=sorted.findIndex(([id])=>id===currentUser.id);
+  el.textContent=myIdx>=0?'#'+(myIdx+1):(myScore>0?'#'+(sorted.length+1):'신규');
+}
+
+// ── STUDY ──
+function startStudy(){
+  const lang=currentUser?.lang||selectedLangCode||'ja';
+  const lessons=LESSONS[lang]||LESSONS.ja;
+  const today=new Date();
+  const dayI=Math.floor((today-new Date(today.getFullYear(),today.getMonth(),1))/(86400000))%lessons.length;
+  currentLesson=lessons[dayI];
+  studyStep=0;
+  renderStudyStep();
+  showScreen('studyScreen');
+}
+function renderStudyStep(){
+  for(let i=0;i<3;i++){const d=document.getElementById('sd'+i);d.classList.remove('active','done');if(i<studyStep)d.classList.add('done');else if(i===studyStep)d.classList.add('active');}
+  document.getElementById('studyStepNum').textContent=`${studyStep+1} / 2`;
+  if(studyStep===0){
+    document.getElementById('studyStepTitle').textContent='📖 단어 학습';
+    document.getElementById('stepLabel').textContent='카드를 탭하면 발음을 들을 수 있어요 🔊';
+    document.getElementById('studyPrevBtn').style.visibility='hidden';
+    document.getElementById('studyNextBtn').textContent='문장 학습으로 →';
+    renderWordCards();
+  }else{
+    document.getElementById('studyStepTitle').textContent='💬 문장 학습';
+    document.getElementById('stepLabel').textContent='문장 카드를 탭해서 발음을 들어요 🔊';
+    document.getElementById('studyPrevBtn').style.visibility='visible';
+    document.getElementById('studyNextBtn').textContent='평가 시작 →';
+    renderSentenceCards();
+  }
+}
+function getLangTts(){return LANG_INFO[currentUser?.lang||'ja']?.tts||'ja-JP';}
+function renderWordCards(){
+  const lang=currentUser?.lang||'ja';
+  const li=LANG_INFO[lang];
+  document.getElementById('cardsWrapper').innerHTML=`
+    <div class="card-section-title">📖 단어 5개 <span style="background:var(--primary-light);color:var(--primary);border-radius:8px;padding:2px 8px;font-size:12px">${li?.flag} ${currentLesson.theme}</span></div>
+    <div style="font-size:11px;color:var(--sub)">← 옆으로 밀어서 모든 카드 확인</div>
+    <div class="h-scroll" id="wordScroll"></div>
+  `;
+  const scroll=document.getElementById('wordScroll');
+  currentLesson.words.forEach((wd,i)=>{
+    const c=document.createElement('div');
+    c.className='word-card';c.id='wc'+i;
+    c.innerHTML=`<div class="word-foreign">${wd.w}</div><div class="word-reading">${wd.r}</div><div class="word-meaning">${wd.m}</div><div class="word-speaker">🔊 탭해서 듣기</div>`;
+    c.onclick=()=>speakCard(wd.w,getLangTts(),'wc'+i);
+    scroll.appendChild(c);
+  });
+}
+function renderSentenceCards(){
+  document.getElementById('cardsWrapper').innerHTML=`
+    <div class="card-section-title">💬 문장 5개 <span style="background:var(--blue-light);color:var(--blue);border-radius:8px;padding:2px 8px;font-size:12px">단어 포함</span></div>
+    <div style="font-size:11px;color:var(--sub)">← 옆으로 밀어서 모든 문장 확인</div>
+    <div class="h-scroll" id="sentScroll"></div>
+  `;
+  const scroll=document.getElementById('sentScroll');
+  currentLesson.sentences.forEach((s,i)=>{
+    const c=document.createElement('div');
+    c.className='sentence-card';c.id='sc'+i;
+    c.innerHTML=`<div class="sent-foreign">${s.w}</div><div class="sent-reading">${s.r}</div><div class="sent-meaning">${s.m}</div><div class="word-speaker">🔊 탭해서 듣기</div>`;
+    c.onclick=()=>speakCard(s.w,getLangTts(),'sc'+i);
+    scroll.appendChild(c);
+  });
+}
+function studyNext(){
+  if(studyStep===0){studyStep=1;renderStudyStep();}
+  else{
+    // 이미 진행 중인 퀴즈가 있으면 이어서
+    if(quizIdx>0 && quizItems.length>0 && quizIdx<quizItems.length){
+      showScreen('quizScreen'); renderQuiz();
+    } else {
+      startQuiz();
+    }
+  }
+}
+function studyPrev(){if(studyStep===1){studyStep=0;renderStudyStep();}}
+function goBack(){
+  const screens = ['quizScreen','studyScreen','langSelectScreen','authScreen'];
+  const active = screens.find(s => !document.getElementById(s).classList.contains('hidden'));
+  if(active === 'quizScreen') {
+    // 퀴즈 위치 저장 후 이전 화면으로
+    showScreen('studyScreen'); studyStep=1; renderStudyStep();
+  }
+  else if(active === 'studyScreen') {
+    if(studyStep === 1) { studyStep=0; renderStudyStep(); }
+    else { showTab('home'); }
+  }
+  else if(active === 'langSelectScreen') { showScreen('authScreen'); }
+  else { showScreen('splashScreen'); }
+}
+
+// ── QUIZ (4지선다) ──
+function startQuiz(){
+  quizItems=[
+    ...currentLesson.words.map(w=>{return{w:w.w,r:w.r,m:w.m,type:'word'}}),
+    ...currentLesson.sentences.map(s=>{return{w:s.w,r:s.r,m:s.m,type:'sent'}})
+  ];
+  quizIdx=0;quizResults=new Array(quizItems.length).fill(null);
+  showScreen('quizScreen');renderQuiz();
+}
+
+function getWrongChoices(correct,all,n){
+  const pool=all.filter(x=>x.w!==correct.w);
+  const shuffled=pool.sort(()=>Math.random()-.5);
+  return shuffled.slice(0,n);
+}
+
+function renderQuiz(){
+  quizAnswered=false;
+  const q=quizItems[quizIdx];
+  const allWords=[...currentLesson.words,...currentLesson.sentences];
+  document.getElementById('quizNum').textContent=`${quizIdx+1} / ${quizItems.length}`;
+  document.getElementById('quizProgress').textContent=`문제 ${quizIdx+1} / ${quizItems.length} (${q.type==='word'?'단어':'문장'})`;
+  document.getElementById('quizMeaning').textContent=q.m;
+  document.getElementById('quizSub').textContent=q.type==='sent'?'문장으로 답하세요':'';
+  document.getElementById('quizFeedback').textContent='';
+  document.getElementById('quizFeedback').className='quiz-feedback';
+
+  // dots
+  const counter=document.getElementById('quizCounter');
+  counter.innerHTML='';
+  quizItems.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='q-dot'+(i<quizIdx?(quizResults[i]?' correct':' wrong'):'')+(i===quizIdx?' current':'');
+    counter.appendChild(d);
+  });
+
+  // 4지선다 만들기
+  const wrong=getWrongChoices(q,allWords,3);
+  const choices=[q,...wrong].sort(()=>Math.random()-.5);
+  const grid=document.getElementById('choicesGrid');
+  grid.innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.textContent=ch.w;
+    btn.onclick=()=>selectChoice(btn,ch.w===q.w,q);
+    grid.appendChild(btn);
+  });
+}
+
+function selectChoice(btn,isCorrect,q){
+  if(quizAnswered)return;
+  quizAnswered=true;
+  quizResults[quizIdx]=isCorrect;
+  const fb=document.getElementById('quizFeedback');
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===q.w)b.classList.add('correct');
+  });
+  if(isCorrect){
+    fb.textContent='✅ 정답!';fb.className='quiz-feedback correct';
+  }else{
+    btn.classList.add('wrong');
+    fb.textContent=`❌ 정답: ${q.w}`;fb.className='quiz-feedback wrong';
+  }
+  setTimeout(()=>{quizIdx++;if(quizIdx>=quizItems.length)finishQuiz();else renderQuiz();},1400);
+}
+
+function quizSpeak(){
+  const q=quizItems[quizIdx];
+  speakCard(q.w,getLangTts(),'quiz');
+}
+
+async function finishQuiz(){
+  const correct=quizResults.filter(Boolean).length;
+  const total=quizItems.length;
+  const points=correct*10;
+  if(currentUser&&!currentUser.isGuest){
+    const users=getUsers();
+    const u=users[currentUser.id];
+    if(u){
+        const lg=currentUser.lang||'ja';
+        if(!u.scores) u.scores={};
+        u.scores[lg]=(u.scores[lg]||0)+points;
+        u.score=(u.score||0)+points;
+        users[currentUser.id]=u; saveUsers(users);
+        currentUser.score=u.score; currentUser.scores=u.scores;
+        const ranking=await getRanking(lg);
+        ranking[currentUser.id]=u.scores[lg];
+        await saveRanking(ranking,lg);
+      }
+  }
+  const pct=Math.round(correct/total*100);
+  document.getElementById('resultEmoji').textContent=pct>=80?'🎉':pct>=50?'👍':'💪';
+  document.getElementById('resultScore').textContent=pct+'점';
+  document.getElementById('resultLabel').textContent=pct>=80?'훌륭해요! 오늘도 완벽!':pct>=50?'잘 하고 있어요!':'다음엔 더 잘 할 수 있어요!';
+  document.getElementById('resCorrect').textContent=`${correct}개`;
+  document.getElementById('resWrong').textContent=`${total-correct}개`;
+  document.getElementById('resPoints').textContent=`+${points}점`;
+  const rl=currentUser?.lang||'ja';
+  const rScore=(currentUser?.scores&&currentUser.scores[rl])||0;
+  document.getElementById('resTotalScore').textContent=`${rScore}점 (${LANG_INFO[rl]?.name||''})`;
+  showScreen('resultScreen');
+  if(currentUser&&!currentUser.isGuest) loadAllRankings();
+}
+
+// ── RANKING ──
+async function loadRanking(){
+  showLoading(true);
+  const ranking=await getRanking();
+  showLoading(false);
+  const sorted=Object.entries(ranking).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const medals=['🥇','🥈','🥉'];
+  const list=document.getElementById('rankList');
+  list.innerHTML='';
+  sorted.forEach(([id,score],i)=>{
+    const item=document.createElement('div');
+    item.className='rank-item'+(i===0?' top1':i===1?' top2':i===2?' top3':'');
+    item.innerHTML=`<div class="rank-num">${medals[i]||`#${i+1}`}</div><div class="rank-avatar">${id[0].toUpperCase()}</div><div class="rank-info"><div class="rank-name">${id}${currentUser&&id===currentUser.id?' (나)':''}</div><div class="rank-detail">누적 점수</div></div><div class="rank-score">${score}점</div>`;
+    list.appendChild(item);
+  });
+  if(sorted.length===0)list.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">아직 기록이 없어요<br>첫 번째 주인공이 돼보세요! 🏆</div>';
+  if(currentUser&&!currentUser.isGuest){
+    const idx=sorted.findIndex(([id])=>id===currentUser.id);
+    const card=document.getElementById('myRankCard');
+    card.style.display='flex';
+    document.getElementById('myRankNum').textContent=idx>=0?`#${idx+1}`:'순위없음';
+    document.getElementById('myRankName').textContent=currentUser.id;
+    document.getElementById('myRankScore').textContent=`${currentUser.score||0}점 누적`;
+  }
+}
+
+// ── PROFILE ──
+async function loadProfile(){
+  if(!currentUser)return;
+  const pav=currentUser.id.replace(/[^가-힣a-zA-Z]/g,'');
+  document.getElementById('profileAvatar').textContent=pav?pav[0].toUpperCase():'👤';
+  document.getElementById('profileName').textContent=currentUser.id;
+  const li=LANG_INFO[currentUser.lang||'ja'];
+  document.getElementById('profileLangLabel').textContent=`공부 중: ${li?.flag} ${li?.name}`;
+  document.getElementById('pStreak').textContent=currentUser.streak||0;
+  const pll=currentUser.lang||'ja';
+  document.getElementById('pScore').textContent=(currentUser.scores&&currentUser.scores[pll])||0;
+  document.getElementById('pDays').textContent=currentUser.days||0;
+  if(!currentUser.isGuest){
+    const pl=currentUser.lang||'ja';
+    const ranking=await getRanking(pl);
+    const sorted=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
+    const idx=sorted.findIndex(([id])=>id===currentUser.id);
+    document.getElementById('pRank').textContent=idx>=0?`#${idx+1}`:`-`;
+  renderNicknameSection();
+  }else{document.getElementById('pRank').textContent='-';}
+}
+
+// ── 프로필 수정 ──
+function changePw(){
+  const cur=document.getElementById('curPw').value;
+  const nw=document.getElementById('newPw').value;
+  const errEl=document.getElementById('pwChangeErr');
+  if(!currentUser||currentUser.isGuest){showToast('게스트는 변경 불가해요');return;}
+  const users=getUsers();
+  const u=users[currentUser.id];
+  if(!u||u.pw!==cur){errEl.style.display='block';return;}
+  errEl.style.display='none';
+  if(nw.length<6){showToast('비밀번호는 6자 이상이어야 해요');return;}
+  u.pw=nw;
+  users[currentUser.id]=u;saveUsers(users);currentUser.pw=nw;
+  document.getElementById('curPw').value='';
+  document.getElementById('newPw').value='';
+  showToast('✅ 비밀번호가 변경되었어요');
+}
+
+function renderNicknameSection(){
+  const sec=document.getElementById('nicknameSection');
+  if(!sec||!currentUser||currentUser.isGuest){
+    if(sec) sec.innerHTML='';
+    return;
+  }
+  const today=new Date();
+  const day=today.getDate();
+  const canChange = day>=1 && day<=15;
+
+  // 월평균 점수 계산 (scores 전체 합산 기준)
+  const totalScore=currentUser.score||0;
+  const days=Math.max(currentUser.days||1,1);
+  const avgPerDay=totalScore/days;
+  const avgScore=Math.round(avgPerDay*10); // 10문제 기준 환산
+  const qualified=avgScore>=95;
+
+  let content='';
+  if(!qualified){
+    content=`
+      <div style="background:var(--primary-light);border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px">👑 닉네임 변경 특권이란?</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6">
+          월 평균 <strong>95점 이상</strong>을 달성한 우수 학습자에게만 주어지는 특권이에요.<br>
+          매월 <strong>1일~15일</strong> 사이에만 변경 가능해요.<br><br>
+          현재 내 평균: <strong style="color:var(--primary)">${avgScore}점</strong> (95점 필요)
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);text-align:center">아직 닉네임 변경 자격이 없어요 💪</div>`;
+  } else if(!canChange){
+    content=`
+      <div style="background:var(--primary-light);border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px">👑 닉네임 변경 가능!</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6">
+          월 평균 <strong>95점 이상</strong> 달성 축하해요! 🎉<br>
+          하지만 변경 가능 기간(<strong>매월 1~15일</strong>)이 아직 아니에요.<br>
+          다음 달 1일부터 변경할 수 있어요.
+        </div>
+      </div>`;
+  } else {
+    content=`
+      <div style="background:var(--green-light);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px">👑 닉네임 변경 가능 기간!</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6">
+          월 평균 95점 이상 + 1~15일 조건 충족! 🎉<br>
+          <strong>${16-day}일 후</strong> 이 특권이 사라져요.
+        </div>
+      </div>
+      <div class="field-wrap" style="margin-bottom:10px">
+        <div class="field-label">새 닉네임</div>
+        <input class="field-input" id="newNickname" placeholder="새 닉네임 (최대 20자)" maxlength="20"/>
+        <div class="err-msg" id="nicknameErr">이미 사용 중인 닉네임이에요</div>
+      </div>
+      <button class="btn-full" style="height:44px;font-size:14px;background:var(--green)" onclick="changeNickname()">닉네임 변경하기</button>`;
+  }
+  sec.style.background='var(--surface)';
+  sec.style.border='1.5px solid var(--border)';
+  sec.innerHTML=`<div style="font-size:14px;font-weight:700;margin-bottom:12px">✏️ 닉네임 변경</div>${content}`;
+}
+
+function changeNickname(){
+  const nn=document.getElementById('newNickname')?.value.trim();
+  if(!nn){showToast('닉네임을 입력해주세요');return;}
+  const users=getUsers();
+  if(users[nn]&&nn!==currentUser.id){
+    document.getElementById('nicknameErr').style.display='block';return;
+  }
+  document.getElementById('nicknameErr').style.display='none';
+  // 기존 데이터를 새 닉네임으로 이전
+  const userData=users[currentUser.id];
+  delete users[currentUser.id];
+  users[nn]={...userData};
+  saveUsers(users);
+  const oldId=currentUser.id;
+  currentUser={id:nn,...userData};
+  saveSession(nn);
+  showToast('✅ 닉네임이 변경되었어요!');
+  loadProfile();
+}
+
+// ── 모든 언어 랭킹 로드 (결과 화면) ──
+async function loadAllRankings(){
+  const langs=['ja','en','zh','es','fr'];
+  const box=document.getElementById('allRankingsContent');
+  if(!box) return;
+  box.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:8px">계산 중... ⏳</div>';
+
+  const results=[];
+  for(const lg of langs){
+    const ranking=await getRanking(lg);
+    const sorted=Object.entries(ranking).sort((a,b)=>b[1]-a[1]);
+    const idx=sorted.findIndex(([id])=>id===currentUser?.id);
+    const myScore=(currentUser?.scores&&currentUser.scores[lg])||0;
+    results.push({lg,ranking:sorted,myIdx:idx,myScore});
+  }
+
+  box.innerHTML='';
+  results.forEach(({lg,ranking,myIdx,myScore})=>{
+    const li=LANG_INFO[lg];
+    const total=ranking.length;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)';
+    const rankText=myIdx>=0?`#${myIdx+1} / ${total}명`:(myScore>0?`${total+1}위`:'미참여');
+    const rankColor=myIdx===0?'var(--gold)':myIdx>=0?'var(--primary)':'var(--muted)';
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">${li.flag}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700">${li.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${total}명 참여</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:800;color:${rankColor}">${rankText}</div>
+        <div style="font-size:11px;color:var(--muted)">${myScore}점</div>
+      </div>`;
+    box.appendChild(row);
+  });
+  // 마지막 border 제거
+  if(box.lastChild) box.lastChild.style.borderBottom='none';
+}
+
+// ── TTS ──
+function speakCard(text,lang,cardId){
+  if(!('speechSynthesis'in window)){showToast('이 브라우저는 TTS를 지원하지 않아요');return;}
+  window.speechSynthesis.cancel();
+  if(speakingId===cardId){speakingId=null;return;}
+  speakingId=cardId;
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang||'ja-JP';
+  u.rate=0.85;
+  u.pitch=1.0;
+
+  const go=()=>{
+    const vs=window.speechSynthesis.getVoices();
+    // 언어 코드 기준으로 정확한 voice 선택
+    const langCode=lang||'ja-JP';
+    const baseLang=langCode.split('-')[0]; // en, ja, zh, es, fr
+
+    // 우선순위: 정확한 언어 일치 → 기본 언어 일치 → 기본값
+    let v = vs.find(x=>x.lang===langCode)          // 정확히 일치
+           || vs.find(x=>x.lang.startsWith(baseLang+'-'))  // 같은 언어
+           || vs.find(x=>x.lang.startsWith(baseLang));     // 언어 prefix
+
+    // 영어는 en-US 우선
+    if(baseLang==='en'){
+      v = vs.find(x=>x.lang==='en-US')
+        || vs.find(x=>x.lang.startsWith('en-'))
+        || v;
+    }
+    // 중국어는 zh-CN 우선
+    if(baseLang==='zh'){
+      v = vs.find(x=>x.lang==='zh-CN')
+        || vs.find(x=>x.lang.startsWith('zh-'))
+        || v;
+    }
+    // 일본어는 ja-JP 우선
+    if(baseLang==='ja'){
+      v = vs.find(x=>x.lang==='ja-JP')
+        || vs.find(x=>x.lang.startsWith('ja-'))
+        || v;
+    }
+
+    if(v){
+      u.voice=v;
+      u.lang=v.lang; // voice의 실제 lang으로 덮어쓰기
+    }
+    u.onend=()=>{speakingId=null;};
+    u.onerror=()=>{speakingId=null;};
+    window.speechSynthesis.speak(u);
+  };
+
+  const voices=window.speechSynthesis.getVoices();
+  if(voices.length>0){go();}
+  else{window.speechSynthesis.onvoiceschanged=go;}
+}
+
+// ── UTILS ──
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function showLoading(v){document.getElementById('loading').classList.toggle('show',v);}
+
+// ── INIT ──
+(async function init(){
+  // 무조건 스플래시 먼저
+  document.querySelectorAll('.screen').forEach(el=>el.style.display='none');
+  document.getElementById('splashScreen').style.display='flex';
+  
+  const sid=getSession();
+  if(sid){
+    try{
+      const users=getUsers();
+      if(users[sid]){
+        currentUser={id:sid,...users[sid]};
+        selectedLangCode=currentUser.lang||'ja';
+        updateStreak();
+        await loadHome();
+        document.querySelectorAll('.screen').forEach(el=>el.style.display='none');
+        document.getElementById('homeScreen').style.display='flex';
+        return;
+      }
+    }catch(e){ console.error(e); }
+  }
+})();
+</script>
+</body>
+</html>
