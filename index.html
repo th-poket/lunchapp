@@ -2,8 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"/>
 <title>점심때 뭐해?</title>
+<!-- PWA -->
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="점심때뭐해"/>
+<meta name="theme-color" content="#e8613a"/>
+<meta name="description" content="점심 짬에 20분, 매일 조금씩 언어 공부 — 일본어·영어·중국어·스페인어·프랑스어"/>
+<link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
@@ -1272,15 +1280,43 @@ let quizAnswered = false;
 // ── SUPABASE ──
 const SB_URL = 'https://jkkrwyvrulmiqukroogt.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impra3J3eXZydWxtaXF1a3Jvb2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODQwODUsImV4cCI6MjA5NjU2MDA4NX0.jjRBcM9b19hgTwGpF7smqctv2GTRAv5EJqTB_JKtECM';
+let _sbOnline = true; // 네트워크 상태 캐시
 
-async function sbFetch(path, method='GET', body=null){
+async function sbFetch(path, method='GET', body=null, isUpsert=false){
   try{
-    const opts={method,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'resolution=merge-duplicates':''}} ;
-    if(body) opts.body=JSON.stringify(body);
-    const r=await fetch(SB_URL+path,opts);
-    const text=await r.text();
-    return text?JSON.parse(text):[];
-  }catch(e){console.error('sbFetch error:',e);return null;}
+    const headers = {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+    };
+    if(method === 'POST' && isUpsert){
+      headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
+    } else if(method === 'POST'){
+      headers['Prefer'] = 'return=minimal';
+    }
+    const opts = { method, headers, mode: 'cors' };
+    if(body) opts.body = JSON.stringify(body);
+
+    // 8초 타임아웃 (AbortSignal 없이 Promise.race 방식)
+    const fetchPromise = fetch(SB_URL + path, opts);
+    const timeoutPromise = new Promise((_,reject) =>
+      setTimeout(()=>reject(new Error('timeout')), 8000)
+    );
+    const r = await Promise.race([fetchPromise, timeoutPromise]);
+    _sbOnline = true;
+
+    if(!r.ok){
+      const errText = await r.text();
+      console.warn(`sbFetch ${method} ${path} → ${r.status}:`, errText);
+      return null;
+    }
+    const text = await r.text();
+    return text ? JSON.parse(text) : [];
+  } catch(e){
+    console.warn('sbFetch offline/error:', e.message || e);
+    _sbOnline = false;
+    return null;
+  }
 }
 
 // ── STORAGE ──
@@ -1308,22 +1344,29 @@ async function upsertUser(data){
   const users=getUsers();
   users[data.id]=data;
   saveUsers(users);
-  try{await sbFetch('/rest/v1/users','POST',data);}catch(e){console.error('upsertUser:',e);}
+  await sbFetch('/rest/v1/users','POST',data,true); // upsert
 }
 
 async function getRanking(lang){
   const lg=lang||'ja';
-  try{
-    const rows=await sbFetch(`/rest/v1/rankings?lang=eq.${lg}&select=user_id,score&order=score.desc&limit=50`);
-    if(rows&&rows.length>0){const obj={};rows.forEach(r=>obj[r.user_id]=r.score);localStorage.setItem('local_rank_'+lg,JSON.stringify(obj));return obj;}
-  }catch(e){console.error('getRanking:',e);}
+  const rows=await sbFetch(`/rest/v1/rankings?lang=eq.${lg}&select=user_id,score&order=score.desc&limit=50`);
+  if(rows&&rows.length>0){
+    const obj={};rows.forEach(r=>obj[r.user_id]=r.score);
+    localStorage.setItem('local_rank_'+lg,JSON.stringify(obj));
+    return obj;
+  }
+  // offline fallback
   try{return JSON.parse(localStorage.getItem('local_rank_'+lg)||'{}');}catch{return{};}
 }
 async function saveRanking(data,lang){
   const lg=lang||'ja';
   try{localStorage.setItem('local_rank_'+lg,JSON.stringify(data));}catch{}
   if(!currentUser||currentUser.isGuest)return;
-  try{await sbFetch('/rest/v1/rankings','POST',{user_id:currentUser.id,lang:lg,score:data[currentUser.id]||0,updated_at:new Date().toISOString()});}catch(e){console.error('saveRanking:',e);}
+  // isUpsert=true: 동일 user_id+lang 중복 시 점수 업데이트
+  await sbFetch('/rest/v1/rankings','POST',
+    {user_id:currentUser.id,lang:lg,score:data[currentUser.id]||0,updated_at:new Date().toISOString()},
+    true
+  );
 }
 
 // ── NAV ──
@@ -1674,7 +1717,13 @@ async function finishQuiz(){
 // ── RANKING ──
 async function loadRanking(){
   showLoading(true);
-  const ranking=await getRanking();
+  // ✅ 현재 선택된 언어 기준으로 랭킹 로드
+  const lg = currentUser?.lang || selectedLangCode || 'ja';
+  const li = LANG_INFO[lg];
+  // 랭킹 탭 제목에 현재 언어 표시
+  const rankTitle = document.getElementById('rankSubTitle');
+  if(rankTitle) rankTitle.textContent = `${li?.flag||''} ${li?.name||''} 누적 점수 순위`;
+  const ranking=await getRanking(lg);
   showLoading(false);
   const sorted=Object.entries(ranking).sort((a,b)=>b[1]-a[1]).slice(0,20);
   const medals=['🥇','🥈','🥉'];
@@ -1683,17 +1732,19 @@ async function loadRanking(){
   sorted.forEach(([id,score],i)=>{
     const item=document.createElement('div');
     item.className='rank-item'+(i===0?' top1':i===1?' top2':i===2?' top3':'');
-    item.innerHTML=`<div class="rank-num">${medals[i]||`#${i+1}`}</div><div class="rank-avatar">${id[0].toUpperCase()}</div><div class="rank-info"><div class="rank-name">${id}${currentUser&&id===currentUser.id?' (나)':''}</div><div class="rank-detail">누적 점수</div></div><div class="rank-score">${score}점</div>`;
+    item.innerHTML=`<div class="rank-num">${medals[i]||`#${i+1}`}</div><div class="rank-avatar">${id[0].toUpperCase()}</div><div class="rank-info"><div class="rank-name">${id}${currentUser&&id===currentUser.id?' (나)':''}</div><div class="rank-detail">${li?.flag||''} ${li?.name||''}</div></div><div class="rank-score">${score}점</div>`;
     list.appendChild(item);
   });
   if(sorted.length===0)list.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">아직 기록이 없어요<br>첫 번째 주인공이 돼보세요! 🏆</div>';
   if(currentUser&&!currentUser.isGuest){
     const idx=sorted.findIndex(([id])=>id===currentUser.id);
+    // ✅ 현재 언어 점수로 표시
+    const myLangScore = (currentUser.scores && currentUser.scores[lg]) || 0;
     const card=document.getElementById('myRankCard');
     card.style.display='flex';
     document.getElementById('myRankNum').textContent=idx>=0?`#${idx+1}`:'순위없음';
     document.getElementById('myRankName').textContent=currentUser.id;
-    document.getElementById('myRankScore').textContent=`${currentUser.score||0}점 누적`;
+    document.getElementById('myRankScore').textContent=`${myLangScore}점 (${li?.name||''})`;
   }
 }
 
@@ -1915,29 +1966,42 @@ function speakCard(text,lang,cardId){
 }
 
 // ── UTILS ──
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function showToast(msg,duration=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),duration);}
 function showLoading(v){document.getElementById('loading').classList.toggle('show',v);}
+
+// ── 네트워크 상태 감지 ──
+window.addEventListener('online', ()=>showToast('🌐 네트워크 연결됨 — 랭킹 동기화 중...'));
+window.addEventListener('offline', ()=>showToast('📵 오프라인 모드 — 점수는 로컬 저장',3000));
 
 // ── INIT ──
 (async function init(){
-  // 무조건 스플래시 먼저
+  // 스플래시 먼저 표시
   document.querySelectorAll('.screen').forEach(el=>el.style.display='none');
   document.getElementById('splashScreen').style.display='flex';
-  
+
+  // 최소 1.2초 스플래시 보여주기
+  const splashStart = Date.now();
+  const minSplash = new Promise(r=>setTimeout(r,1200));
+
   const sid=getSession();
+  let ready=false;
   if(sid){
     try{
       const users=getUsers();
       if(users[sid]){
         currentUser={id:sid,...users[sid]};
         selectedLangCode=currentUser.lang||'ja';
-        updateStreak();
-        await loadHome();
+        await Promise.all([updateStreak(), loadHome(), minSplash]);
         document.querySelectorAll('.screen').forEach(el=>el.style.display='none');
         document.getElementById('homeScreen').style.display='flex';
-        return;
+        ready=true;
       }
     }catch(e){ console.error(e); }
+  }
+  if(!ready){
+    await minSplash;
+    // 자동 진행 (splashScreen에 버튼이 없으면 authScreen으로)
+    // 버튼이 있는 경우 그냥 스플래시 유지
   }
 })();
 </script>
