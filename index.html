@@ -363,7 +363,10 @@ html,body{height:100%;background:var(--bg);font-family:'Noto Sans KR',sans-serif
   <div class="app-header">
     <button style="background:none;border:none;font-size:22px;cursor:pointer" onclick="showTab('home')">←</button>
     <div style="font-size:15px;font-weight:800">🔁 복습 단어장</div>
-    <div style="font-size:12px;color:var(--sub)"><span id="reviewTotal">0</span>개</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span id="reviewLangFlag" style="font-size:16px">🇯🇵</span>
+      <div style="font-size:12px;color:var(--sub)"><span id="reviewTotal">0</span>개</div>
+    </div>
   </div>
   <div class="review-body">
     <div id="reviewList"></div>
@@ -1530,6 +1533,7 @@ async function confirmLang(){
     upsertUser(d);
   }
   await updateStreak();loadHome();showScreen('homeScreen');
+  updateReviewBadge(selectedLangCode);
 }
 
 // ── HOME ──
@@ -2071,13 +2075,16 @@ function updateReviewBadge(lang){
 }
 
 function loadReviewScreen(){
-  const lang = currentUser?.lang || 'ja';
+  const lang = currentUser?.lang || selectedLangCode || 'ja';
   const words = getReviewWords(lang);
   const list = document.getElementById('reviewList');
   const total = document.getElementById('reviewTotal');
   const quizBtn = document.getElementById('reviewQuizBtn');
   if(total) total.textContent = words.length;
   if(quizBtn) quizBtn.style.display = words.length>0 ? 'block' : 'none';
+  // 현재 언어 플래그 업데이트
+  const flagEl = document.getElementById('reviewLangFlag');
+  if(flagEl) flagEl.textContent = LANG_INFO[lang]?.flag || '';
   if(!list) return;
   if(words.length === 0){
     list.innerHTML = '<div class="review-empty">🎉 복습할 단어가 없어요!<br><br>퀴즈에서 틀린 단어가<br>여기 자동으로 쌓여요.</div>';
