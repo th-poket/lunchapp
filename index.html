@@ -1397,7 +1397,7 @@ async function upsertUser(data){
 }
 
 async function getRanking(lang){
-  const lg=lang||'ja';
+  const lg=lang||currentUser?.lang||'ja';
   const rows=await sbFetch(`/rest/v1/rankings?lang=eq.${lg}&select=user_id,score&order=score.desc&limit=50`);
   if(rows&&rows.length>0){
     const obj={};rows.forEach(r=>obj[r.user_id]=r.score);
@@ -1408,7 +1408,7 @@ async function getRanking(lang){
   try{return JSON.parse(localStorage.getItem('local_rank_'+lg)||'{}');}catch{return{};}
 }
 async function saveRanking(data,lang){
-  const lg=lang||'ja';
+  const lg=lang||currentUser?.lang||'ja';
   try{localStorage.setItem('local_rank_'+lg,JSON.stringify(data));}catch{}
   if(!currentUser||currentUser.isGuest)return;
   // isUpsert=true: 동일 user_id+lang 중복 시 점수 업데이트
