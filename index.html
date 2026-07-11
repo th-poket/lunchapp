@@ -1988,7 +1988,7 @@ function speakCard(text,lang,cardId){
   const go=()=>{
     const vs=window.speechSynthesis.getVoices();
     // 언어 코드 기준으로 정확한 voice 선택
-    const langCode=lang||'ja-JP';
+    const langCode=lang||(currentUser?.lang?LANG_INFO[currentUser.lang]?.tts:null)||'ja-JP';
     const baseLang=langCode.split('-')[0]; // en, ja, zh, es, fr
 
     // 우선순위: 정확한 언어 일치 → 기본 언어 일치 → 기본값
