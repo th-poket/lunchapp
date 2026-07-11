@@ -1707,7 +1707,7 @@ function renderQuiz(){
   choices.forEach(ch=>{
     const btn=document.createElement('button');
     btn.className='choice-btn';
-    btn.textContent=ch.w;
+    btn.textContent=ch.r||ch.w;
     btn.onclick=()=>selectChoice(btn,ch.w===q.w,q);
     grid.appendChild(btn);
   });
