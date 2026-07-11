@@ -1490,7 +1490,7 @@ function loginSuccess(id, userData){
     streak:userData.streak||0,
     days:userData.days||0,
     lastDate:userData.last_date||userData.lastDate||'',
-    lang:userData.lang||'ja',
+    lang:userData.lang||selectedLangCode||'ja',
     isGuest:userData.is_guest||userData.isGuest||false
   };
   saveSession(id);
@@ -1541,7 +1541,7 @@ async function loadHome(){
   if(!currentUser)return;
   const today=new Date();
   document.getElementById('todayDate').textContent=today.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-  const lang=currentUser.lang||selectedLangCode||'ja';
+  const lang=currentUser.lang||selectedLangCode||'ja';if(currentUser.lang)selectedLangCode=currentUser.lang;
   const lessons=LESSONS[lang]||LESSONS.ja;
   const dayIdx=Math.floor((today-new Date(today.getFullYear(),today.getMonth(),1))/(86400000))%lessons.length;
   const li=lessons[dayIdx];
