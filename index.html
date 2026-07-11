@@ -1744,13 +1744,13 @@ async function finishQuiz(){
   const correct=quizResults.filter(Boolean).length;
   const total=quizItems.length;
   const points=correct*10;
-  if(currentUser&&!currentUser.isGuest){
+  const todayStr=new Date().toISOString().slice(0,10);if(currentUser&&!currentUser.isGuest&&currentUser.lastDate!==todayStr){
     const users=getUsers();
     const u=users[currentUser.id];
     if(u){
         const lg=currentUser.lang||'ja';
         if(!u.scores) u.scores={};
-        u.scores[lg]=(u.scores[lg]||0)+points;
+        u.scores[lg]=(u.scores[lg]||0)+points;u.lastDate=todayStr;
         u.score=(u.score||0)+points;
         users[currentUser.id]=u; saveUsers(users);
         currentUser.score=u.score; currentUser.scores=u.scores;
@@ -1800,7 +1800,7 @@ async function loadRanking(){
     list.appendChild(item);
   });
   if(sorted.length===0)list.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">아직 기록이 없어요<br>첫 번째 주인공이 돼보세요! 🏆</div>';
-  if(currentUser&&!currentUser.isGuest){
+  const todayStr=new Date().toISOString().slice(0,10);if(currentUser&&!currentUser.isGuest&&currentUser.lastDate!==todayStr){
     const idx=sorted.findIndex(([id])=>id===currentUser.id);
     // ✅ 현재 언어 점수로 표시
     const myLangScore = (currentUser.scores && currentUser.scores[lg]) || 0;
