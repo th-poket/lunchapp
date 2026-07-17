@@ -1750,7 +1750,7 @@ async function finishQuiz(){
     if(u){
         const lg=currentUser.lang||'ja';
         if(!u.scores) u.scores={};
-        u.scores[lg]=(u.scores[lg]||0)+points;u.lastDate=todayStr;
+        u.scores[lg]=(u.scores[lg]||0)+points;u.lastDate=todayStr;currentUser.lastDate=todayStr;
         u.score=(u.score||0)+points;
         users[currentUser.id]=u; saveUsers(users);
         currentUser.score=u.score; currentUser.scores=u.scores;
