@@ -1744,13 +1744,13 @@ async function finishQuiz(){
   const correct=quizResults.filter(Boolean).length;
   const total=quizItems.length;
   const points=correct*10;
-  const todayStr=new Date().toISOString().slice(0,10);if(currentUser&&!currentUser.isGuest&&currentUser.lastDate!==todayStr){
+  const todayStr=new Date().toISOString().slice(0,10);if(currentUser&&!currentUser.isGuest&&currentUser.lastQuizDate!==todayStr){
     const users=getUsers();
     const u=users[currentUser.id];
     if(u){
         const lg=currentUser.lang||'ja';
         if(!u.scores) u.scores={};
-        u.scores[lg]=(u.scores[lg]||0)+points;u.lastDate=todayStr;currentUser.lastDate=todayStr;
+        u.scores[lg]=(u.scores[lg]||0)+points;u.lastQuizDate=todayStr;currentUser.lastQuizDate=todayStr;
         u.score=(u.score||0)+points;
         users[currentUser.id]=u; saveUsers(users);
         currentUser.score=u.score; currentUser.scores=u.scores;
